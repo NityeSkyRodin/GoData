@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F1 Telemetry Dashboard</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            f1: {
+              red: '#e10600',
+              dark: '#15151e',
+              card: '#1f1f27',
+              border: '#2d2d38'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="h-full flex flex-col md:flex-row overflow-hidden font-sans antialiased bg-slate-950">
+
+  <!-- MOBILE HEADER -->
+  <div class="md:hidden flex items-center justify-between bg-f1-dark px-4 py-3 border-b border-f1-border z-50 shrink-0">
+    <div class="flex items-center space-x-2">
+      <span class="bg-f1-red text-white text-xs font-black px-2 py-1 rounded tracking-wider">F1</span>
+      <span class="font-bold tracking-tight text-sm text-white">TELEMETRY</span>
+    </div>
+    <button id="mobile-menu-btn" class="p-2 text-slate-400 hover:text-white focus:outline-none">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+  </div>
+
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-f1-dark border-r border-f1-border flex flex-col transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-200 ease-in-out shrink-0">
+    <div class="hidden md:flex items-center space-x-3 p-5 border-b border-f1-border">
+      <div class="bg-f1-red text-white font-black px-2 py-1 rounded text-sm tracking-wider">F1</div>
+      <div>
+        <h1 class="font-bold tracking-wider text-sm leading-none text-white">TELEMETRY</h1>
+        <span class="text-[10px] text-slate-400 font-mono">SEASON OVERVIEW</span>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 space-y-6">
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 tracking-wider uppercase mb-2 px-2">General</div>
+        <button id="nav-overview" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-f1-red text-white font-medium text-sm transition-all shadow-lg shadow-f1-red/20">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          <span>Season Overview</span>
+        </button>
+      </div>
+
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 tracking-wider uppercase mb-2 px-2">Completed Races</div>
+        <div class="space-y-1" id="race-list"></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto p-4 md:p-8">
+    
+    <div id="view-overview" class="space-y-6 max-w-7xl mx-auto">
+      <div class="border-b border-f1-border pb-4">
+        <h2 class="text-2xl md:text-3xl font-black tracking-tight text-white">SEASON OVERVIEW</h2>
+        <p class="text-xs md:text-sm text-slate-400 mt-1">Championship standings calculated from completed races</p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4" id="stats-cards"></div>
+
+      <div class="bg-f1-card p-4 md:p-6 rounded-xl border border-f1-border shadow-xl">
+        <h3 class="text-sm font-bold text-slate-300 mb-4 flex items-center space-x-2">
+          <span>📈</span>
+          <span>Championship Points Progression</span>
+        </h3>
+        <div class="h-56 md:h-72 w-full">
+          <canvas id="pointsChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-f1-card rounded-xl border border-f1-border overflow-hidden shadow-xl">
+        <div class="px-4 md:px-6 py-4 border-b border-f1-border font-bold text-sm text-slate-200">
+          Driver Standings
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs md:text-sm whitespace-nowrap">
+            <thead class="bg-f1-dark text-slate-400 uppercase text-[10px] md:text-[11px] font-bold tracking-wider">
+              <tr>
+                <th class="py-3 px-3 md:px-4">Pos</th>
+                <th class="py-3 px-3 md:px-4">Driver</th>
+                <th class="py-3 px-3 md:px-4 text-center">Wins</th>
+                <th class="py-3 px-3 md:px-4 text-center">Podiums</th>
+                <th class="py-3 px-3 md:px-4 text-center">DNFs</th>
+                <th class="py-3 px-3 md:px-4 text-right">Points</th>
+              </tr>
+            </thead>
+            <tbody id="standings-table-body" class="divide-y divide-f1-border/50 text-slate-300"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-race" class="hidden space-y-6 max-w-7xl mx-auto">
+      <div class="bg-f1-card p-5 md:p-6 rounded-xl border border-f1-border shadow-xl relative overflow-hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+          <div>
+            <div class="text-[10px] md:text-xs font-bold text-f1-red uppercase tracking-wider mb-1">Race Results</div>
+            <h2 id="race-title" class="text-2xl md:text-4xl font-black text-white tracking-tight">--</h2>
+            <p id="race-date" class="text-xs text-slate-400 mt-1">--</p>
+          </div>
+          <div class="flex items-center justify-between md:justify-end space-x-3 bg-f1-dark px-4 py-3 rounded-lg border border-f1-border">
+            <div class="text-left md:text-right">
+              <div class="text-[10px] text-slate-400 uppercase font-bold">Winner</div>
+              <div id="race-winner" class="font-bold text-emerald-400 text-sm md:text-base">--</div>
+            </div>
+            <div class="text-2xl">🏆</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-f1-card rounded-xl border border-f1-border overflow-hidden shadow-xl">
+        <div class="px-4 md:px-6 py-4 border-b border-f1-border font-bold text-sm text-slate-200">
+          Full Classification
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs md:text-sm whitespace-nowrap">
+            <thead class="bg-f1-dark text-slate-400 uppercase text-[10px] md:text-[11px] font-bold tracking-wider">
+              <tr>
+                <th class="py-3 px-3 md:px-4">Pos</th>
+                <th class="py-3 px-3 md:px-4">No</th>
+                <th class="py-3 px-3 md:px-4">Driver</th>
+                <th class="py-3 px-3 md:px-4 text-center">Laps</th>
+                <th class="py-3 px-3 md:px-4">Total Time</th>
+                <th class="py-3 px-3 md:px-4">Fastest Lap</th>
+                <th class="py-3 px-3 md:px-4 text-center">Status</th>
+                <th class="py-3 px-3 md:px-4 text-right">Points</th>
+              </tr>
+            </thead>
+            <tbody id="race-table-body" class="divide-y divide-f1-border/50 text-slate-300"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

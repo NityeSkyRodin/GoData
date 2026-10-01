@@ -1,20 +1,81 @@
-﻿package main
+package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	"net"
 )
 
-//TIP <p>To run your code, right-click the code and select <b>Run</b>.</p> <p>Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.</p>
 func main() {
-	//TIP <p>Press <shortcut actionId="ShowIntentionActions"/> when your caret is at the underlined text
-	// to see how GoLand suggests fixing the warning.</p><p>Alternatively, if available, click the lightbulb to view possible fixes.</p>
-	s := "gopher"
-	fmt.Println("Hello and welcome, %s!", s)
 
-	for i := 1; i <= 5; i++ {
-		//TIP <p>To start your debugging session, right-click your code in the editor and select the Debug option.</p> <p>We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-		// for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.</p>
-		fmt.Println("i =", 100/i)
+	addr, err := net.ResolveUDPAddr("udp", "0.0.0.0:20777")
+	if err != nil {
+		fmt.Println("Error resolving address:", err)
+		return
+	}
+
+	conn, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		fmt.Println("Error opening port 20777:", err)
+		return
+	}
+	defer conn.Close()
+
+	fmt.Println("Go is listening on port 20777 for F2 data...")
+
+	buf := make([]byte, 2048)
+	participants := map[int]Participant{}
+	knownDrivers := 0
+	var lastResultUID uint64
+	
+	var currentTrackID int8 = -1 
+
+	for {
+		n, _, err := conn.ReadFromUDP(buf)
+		if err != nil || n < headerSize {
+			continue
+		}
+
+		var header PacketHeader
+		if err := binary.Read(bytes.NewReader(buf[:headerSize]), binary.LittleEndian, &header); err != nil {
+			continue
+		}
+
+		payload := buf[headerSize:n]
+
+		switch header.PacketID {
+
+		case 1:
+			if len(payload) > 2 {
+				currentTrackID = int8(payload[2])
+			}
+
+		case 2:
+			fmt.Printf("\r[LAP DATA] Frame: %d | Player Car Index: %d  ", header.FrameIdentifier, header.PlayerCarIndex)
+
+		case 4:
+			if p := parseParticipants(payload); len(p) > 0 {
+				participants = p
+				if knownDrivers != len(p) {
+					knownDrivers = len(p)
+					fmt.Printf("\n[LOBBY] Driverlist data received: %d Drivers\n", len(p))
+				}
+			}
+
+		case 8:
+			if header.SessionUID == lastResultUID {
+				continue
+			}
+
+			result, err := parseFinalClassification(header, payload, participants, currentTrackID)
+			if err != nil {
+				fmt.Println("\nError parsing final classification:", err)
+				continue
+			}
+			lastResultUID = header.SessionUID
+
+			printResult(result)
+		}
 	}
 }
