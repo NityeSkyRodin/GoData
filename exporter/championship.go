@@ -15,7 +15,7 @@ func ParseFullSeasonResult(db *sql.DB) error {
 
 	fmt.Printf("Full Season Results:\n%v\n", seasonResults)
 
-	err = ParseToJSONFile(seasonResults, "data/races/full_season_results.json")
+	err = ParseToJSONFile(seasonResults, "data/races/championship.json")
 	if err != nil {
 		return err
 	}
