@@ -36,7 +36,7 @@ function initEventListeners() {
 
 
 async function loadChampionship() {
-    const response = await fetch('../data/championship.json');
+    const response = await fetch('../../data/championship.json');
 
     if (!response.ok) {
         throw new Error('championship.json not found');
@@ -47,7 +47,7 @@ async function loadChampionship() {
 
 
 async function loadRaceIndex() {
-    const response = await fetch('../data/races/index.json');
+    const response = await fetch('../../data/races/index.json');
 
     if (!response.ok) {
         throw new Error('races/index.json not found');
@@ -202,7 +202,7 @@ function renderStandings() {
 
 async function loadRace(race) {
     try {
-        const response = await fetch(`../data/races/${race.file}`);
+        const response = await fetch(`../../data/races/${race.file}`);
 
         if (!response.ok) {
             throw new Error(`Could not load ${race.file}`);
