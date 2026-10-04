@@ -1,9 +1,11 @@
-name: Deploy dashboard
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - main
+      - master
+
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,11 +14,11 @@ permissions:
 
 jobs:
   deploy:
+    runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -34,11 +36,10 @@ jobs:
           cp -r data _site/
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
-          path: '_site'
+          path: './_site'
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
-        
