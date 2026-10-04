@@ -1,267 +1,430 @@
 let raceIndex = [];
-let loadedRaceDetails = {}; // Cache geladen race-details in geheugen
-let chartInstance = null;
+let championship = [];
+let currentRace = null;
+let currentSession = 'race';
 
-document.addEventListener("DOMContentLoaded", () => {
-  initEventListeners();
-  fetchRaceIndex();
+
+document.addEventListener('DOMContentLoaded', async () => {
+    initEventListeners();
+
+    try {
+        await loadChampionship();
+        await loadRaceIndex();
+
+        renderChampionship();
+        setupSidebar();
+
+    } catch (error) {
+        console.error('Failed to initialize dashboard:', error);
+    }
 });
 
+
 function initEventListeners() {
-  document.getElementById('nav-overview').addEventListener('click', showOverview);
-  
-  document.getElementById('mobile-menu-btn').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('-translate-x-full');
-  });
+    document
+        .getElementById('nav-overview')
+        .addEventListener('click', showOverview);
+
+    document
+        .getElementById('mobile-menu-btn')
+        .addEventListener('click', () => {
+            document
+                .getElementById('sidebar')
+                .classList.toggle('-translate-x-full');
+        });
 }
 
-function fetchRaceIndex() {
-  fetch('./data/races.json')
-    .then(res => {
-      if (!res.ok) throw new Error("Index races.json niet gevonden");
-      return res.json();
-    })
-    .then(data => {
-      raceIndex = data;
-      initDashboard();
-    })
-    .catch(err => {
-      console.warn("Laden van data/races.json mislukt. Geen data beschikbaar.", err);
-      initDashboard();
-    });
+
+async function loadChampionship() {
+    const response = await fetch('../data/championship.json');
+
+    if (!response.ok) {
+        throw new Error('championship.json not found');
+    }
+
+    championship = await response.json();
 }
 
-function initDashboard() {
-  setupSidebar();
-  showOverview();
+
+async function loadRaceIndex() {
+    const response = await fetch('../data/races/index.json');
+
+    if (!response.ok) {
+        throw new Error('races/index.json not found');
+    }
+
+    raceIndex = await response.json();
 }
+
 
 function setupSidebar() {
-  const raceList = document.getElementById('race-list');
-  raceList.innerHTML = '';
+    const raceList = document.getElementById('race-list');
 
-  raceIndex.forEach((raceSummary) => {
-    const uid = raceSummary.SessionUID;
-    const trackTitle = raceSummary.TrackName || `Race ${uid}`;
-    
-    const btn = document.createElement('button');
-    btn.id = `nav-race-${uid}`;
-    btn.className = 'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-f1-card text-sm transition-all group';
-    btn.onclick = () => loadAndShowRace(uid);
-    btn.innerHTML = `
-      <div class="flex items-center space-x-2">
-        <span class="text-xs">🏁</span>
-        <span class="font-medium text-xs md:text-sm">${trackTitle}</span>
-      </div>
-      <span class="text-[10px] text-slate-500 group-hover:text-slate-300 font-mono">${raceSummary.NumCars || 0} Auto's</span>
+    raceList.innerHTML = '';
+
+    raceIndex.forEach((race) => {
+        const button = document.createElement('button');
+
+        button.className =
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg ' +
+            'text-slate-400 hover:text-white hover:bg-f1-card ' +
+            'text-sm transition-all group';
+
+        button.innerHTML = `
+            <span class="text-xs">🏁</span>
+            <span class="font-medium">${race.track_name}</span>
+        `;
+
+        button.addEventListener('click', () => {
+            loadRace(race);
+        });
+
+        raceList.appendChild(button);
+    });
+}
+
+
+function showOverview() {
+    document.getElementById('view-overview').classList.remove('hidden');
+    document.getElementById('view-race').classList.add('hidden');
+
+    updateActiveNav('nav-overview');
+}
+
+
+function renderChampionship() {
+    renderStats();
+    renderStandings();
+}
+
+
+function renderStats() {
+    const leader = championship[0];
+
+    const container = document.getElementById('stats-cards');
+
+    container.innerHTML = `
+        <div class="bg-f1-card p-4 rounded-xl border border-f1-border">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Championship Leader
+            </div>
+
+            <div class="text-lg font-black text-white mt-1 truncate">
+                ${leader?.driver_name ?? '--'}
+            </div>
+
+            <div class="text-xs text-f1-red font-bold mt-1">
+                ${leader?.points ?? 0} points
+            </div>
+        </div>
+
+
+        <div class="bg-f1-card p-4 rounded-xl border border-f1-border">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Races Completed
+            </div>
+
+            <div class="text-lg font-black text-white mt-1">
+                ${raceIndex.length}
+            </div>
+
+            <div class="text-xs text-emerald-400 font-bold mt-1">
+                Race weekends
+            </div>
+        </div>
+
+
+        <div class="bg-f1-card p-4 rounded-xl border border-f1-border">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Drivers
+            </div>
+
+            <div class="text-lg font-black text-white mt-1">
+                ${championship.length}
+            </div>
+
+            <div class="text-xs text-slate-400 font-bold mt-1">
+                Championship
+            </div>
+        </div>
+
+
+        <div class="bg-f1-card p-4 rounded-xl border border-f1-border">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Points Leader
+            </div>
+
+            <div class="text-lg font-black text-white mt-1">
+                ${leader?.points ?? 0}
+            </div>
+
+            <div class="text-xs text-slate-400 font-bold mt-1">
+                Total points
+            </div>
+        </div>
     `;
-    raceList.appendChild(btn);
-  });
+
+    document.getElementById('season-status').textContent =
+        `${raceIndex.length} race${raceIndex.length === 1 ? '' : 's'} completed`;
 }
 
-async function showOverview() {
-  document.getElementById('view-overview').classList.remove('hidden');
-  document.getElementById('view-race').classList.add('hidden');
-  updateActiveNav('nav-overview');
 
-  await ensureAllRaceDetailsLoaded();
+function renderStandings() {
+    const tbody = document.getElementById('standings-table-body');
 
-  const standings = calculateStandings();
-  renderStatCards(standings);
-  renderStandingsTable(standings);
-  renderChart(standings);
+    tbody.innerHTML = championship.map((driver, index) => `
+        <tr class="hover:bg-f1-card/50 transition-colors">
+
+            <td class="py-3 px-4 font-black ${
+                index === 0
+                    ? 'text-amber-400'
+                    : 'text-slate-500'
+            }">
+                ${index + 1}
+            </td>
+
+            <td class="py-3 px-4 font-bold text-white">
+                ${driver.driver_name}
+            </td>
+
+            <td class="py-3 px-4 text-slate-400">
+                ${driver.team_name}
+            </td>
+
+            <td class="py-3 px-4 text-right font-black text-white">
+                ${driver.points}
+            </td>
+
+        </tr>
+    `).join('');
 }
 
-async function loadAndShowRace(sessionUID) {
-  let raceDetails = loadedRaceDetails[sessionUID];
 
-  if (!raceDetails) {
+async function loadRace(race) {
     try {
-      const res = await fetch(`./data/race_${sessionUID}.json`);
-      if (!res.ok) throw new Error(`Race ${sessionUID} niet gevonden`);
-      raceDetails = await res.json();
-      loadedRaceDetails[sessionUID] = raceDetails; // Sla op in cache
-    } catch (err) {
-      console.error(`Fout bij het laden van race_${sessionUID}.json`, err);
-      return;
-    }
-  }
+        const response = await fetch(`../data/races/${race.file}`);
 
-  renderRaceView(raceDetails, sessionUID);
-}
-
-function renderRaceView(race, sessionUID) {
-  document.getElementById('view-overview').classList.add('hidden');
-  document.getElementById('view-race').classList.remove('hidden');
-  updateActiveNav(`nav-race-${sessionUID}`);
-
-  document.getElementById('sidebar').classList.add('-translate-x-full');
-
-  document.getElementById('race-title').innerText = race.TrackName || `Race ${sessionUID}`;
-  
-  const dateVal = race.RecordedAt;
-  const dateStr = dateVal ? new Date(dateVal).toLocaleDateString() : '';
-  document.getElementById('race-date').innerText = dateStr ? `Datum: ${dateStr}` : '';
-  
-  const drivers = race.Drivers || [];
-  const winner = drivers.find(r => r.Position === 1);
-  document.getElementById('race-winner').innerText = winner ? winner.Name : 'Onbekend';
-
-  const tbody = document.getElementById('race-table-body');
-  tbody.innerHTML = drivers.map(r => `
-    <tr class="hover:bg-f1-card/50 transition-colors">
-      <td class="py-3 px-3 md:px-4 font-black ${r.Position <= 3 ? 'text-amber-400' : 'text-slate-400'}">${r.Position}</td>
-      <td class="py-3 px-3 md:px-4 font-mono text-slate-500">${r.RaceNumber}</td>
-      <td class="py-3 px-3 md:px-4 font-bold text-white">${r.Name}</td>
-      <td class="py-3 px-3 md:px-4 text-center font-mono">${r.NumLaps}</td>
-      <td class="py-3 px-3 md:px-4 font-mono text-xs">${r.TotalRaceTime}</td>
-      <td class="py-3 px-3 md:px-4 font-mono text-xs text-purple-400">${r.BestLapTime}</td>
-      <td class="py-3 px-3 md:px-4 text-center">
-        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.ResultStatusText === 'Finished' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">
-          ${r.ResultStatusText === 'Finished' ? 'Finished' : 'DNF'}
-        </span>
-      </td>
-      <td class="py-3 px-3 md:px-4 text-right font-black text-f1-red">+${r.Points}</td>
-    </tr>
-  `).join('');
-}
-
-async function ensureAllRaceDetailsLoaded() {
-  const fetchPromises = raceIndex.map(async (summary) => {
-    const uid = summary.SessionUID;
-    if (!loadedRaceDetails[uid]) {
-      try {
-        const res = await fetch(`./data/race_${uid}.json`);
-        if (res.ok) {
-          loadedRaceDetails[uid] = await res.json();
+        if (!response.ok) {
+            throw new Error(`Could not load ${race.file}`);
         }
-      } catch (err) {
-        console.warn(`Kon details niet laden voor UID: ${uid}`);
-      }
+
+        currentRace = await response.json();
+
+        renderRace(currentRace, race);
+
+    } catch (error) {
+        console.error('Failed to load race:', error);
     }
-  });
-
-  await Promise.all(fetchPromises);
 }
 
-function calculateStandings() {
-  const driverMap = {};
-  
-  Object.values(loadedRaceDetails).forEach(race => {
-    const drivers = race.Drivers || [];
-    drivers.forEach(d => {
-      if (!driverMap[d.Name]) {
-        driverMap[d.Name] = { name: d.Name, points: 0, wins: 0, podiums: 0, dnfs: 0 };
-      }
-      driverMap[d.Name].points += d.Points;
-      if (d.Position === 1) driverMap[d.Name].wins++;
-      if (d.Position <= 3) driverMap[d.Name].podiums++;
-      if (d.ResultStatusText !== 'Finished') driverMap[d.Name].dnfs++;
-    });
-  });
 
-  return Object.values(driverMap).sort((a, b) => b.points - a.points);
+function renderRace(race, raceIndexEntry) {
+    document.getElementById('view-overview').classList.add('hidden');
+    document.getElementById('view-race').classList.remove('hidden');
+
+    document
+        .getElementById('sidebar')
+        .classList.add('-translate-x-full');
+
+    updateActiveNav(null);
+
+    document.getElementById('race-title').textContent =
+        race.track_name;
+
+    document.getElementById('race-subtitle').textContent =
+        `Track ID ${race.track_id}`;
+
+    renderSessionTabs(race);
+
+    selectSession(getFirstAvailableSession(race));
 }
 
-function renderStatCards(standings) {
-  const leader = standings[0] || { name: '--', points: 0, wins: 0 };
-  const totalRaces = raceIndex.length;
 
-  const container = document.getElementById('stats-cards');
-  container.innerHTML = `
-    <div class="bg-f1-card p-3 md:p-4 rounded-xl border border-f1-border">
-      <div class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Koploper</div>
-      <div class="text-sm md:text-lg font-black text-white mt-1 truncate">${leader.name}</div>
-      <div class="text-xs text-f1-red font-bold mt-0.5">${leader.points} Pts</div>
-    </div>
-    <div class="bg-f1-card p-3 md:p-4 rounded-xl border border-f1-border">
-      <div class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Races Verwerkt</div>
-      <div class="text-sm md:text-lg font-black text-white mt-1">${totalRaces}</div>
-      <div class="text-xs text-emerald-400 font-bold mt-0.5">Voltooide sessies</div>
-    </div>
-    <div class="bg-f1-card p-3 md:p-4 rounded-xl border border-f1-border">
-      <div class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Meeste Overwinningen</div>
-      <div class="text-sm md:text-lg font-black text-white mt-1 truncate">${leader.name}</div>
-      <div class="text-xs text-amber-400 font-bold mt-0.5">${leader.wins} Wins</div>
-    </div>
-    <div class="bg-f1-card p-3 md:p-4 rounded-xl border border-f1-border">
-      <div class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Actieve Coureurs</div>
-      <div class="text-sm md:text-lg font-black text-white mt-1">${standings.length}</div>
-      <div class="text-xs text-slate-400 font-bold mt-0.5">In klassement</div>
-    </div>
-  `;
+function renderSessionTabs(race) {
+    const container = document.getElementById('session-tabs');
+
+    const sessions = [
+        {
+            key: 'qualifying',
+            label: 'Qualifying'
+        },
+        {
+            key: 'sprint',
+            label: 'Sprint'
+        },
+        {
+            key: 'race',
+            label: 'Race'
+        }
+    ];
+
+    container.innerHTML = sessions
+        .filter(session => race[session.key]?.length)
+        .map(session => `
+            <button
+                data-session="${session.key}"
+                class="
+                    session-tab
+                    px-4 py-2 rounded-lg
+                    text-xs font-bold uppercase tracking-wider
+                    bg-f1-card border border-f1-border
+                    text-slate-400
+                    hover:text-white hover:border-slate-600
+                    transition-all
+                "
+            >
+                ${session.label}
+            </button>
+        `)
+        .join('');
+
+    container
+        .querySelectorAll('.session-tab')
+        .forEach(button => {
+            button.addEventListener('click', () => {
+                selectSession(button.dataset.session);
+            });
+        });
 }
 
-function renderStandingsTable(standings) {
-  const tbody = document.getElementById('standings-table-body');
-  tbody.innerHTML = standings.map((d, i) => `
-    <tr class="hover:bg-f1-card/50 transition-colors">
-      <td class="py-3 px-3 md:px-4 font-black ${i === 0 ? 'text-amber-400' : 'text-slate-400'}">P${i + 1}</td>
-      <td class="py-3 px-3 md:px-4 font-bold text-white">${d.name}</td>
-      <td class="py-3 px-3 md:px-4 text-center font-mono">${d.wins}</td>
-      <td class="py-3 px-3 md:px-4 text-center font-mono">${d.podiums}</td>
-      <td class="py-3 px-3 md:px-4 text-center font-mono text-rose-400">${d.dnfs}</td>
-      <td class="py-3 px-3 md:px-4 text-right font-black text-white text-sm md:text-base">${d.points}</td>
-    </tr>
-  `).join('');
-}
 
-function renderChart(standings) {
-  const ctx = document.getElementById('pointsChart').getContext('2d');
-  if (chartInstance) chartInstance.destroy();
-
-  const topDrivers = standings.slice(0, 4);
-  const labels = raceIndex.map((r) => r.TrackName || `Race ${r.SessionUID}`);
-
-  const datasets = topDrivers.map((driver, idx) => {
-    const colors = ['#e10600', '#3b82f6', '#10b981', '#f59e0b'];
-    let accumulatedPoints = 0;
-    
-    const pointsData = raceIndex.map(summary => {
-      const raceDetail = loadedRaceDetails[summary.SessionUID];
-      if (raceDetail && raceDetail.Drivers) {
-        const res = raceDetail.Drivers.find(r => r.Name === driver.name);
-        accumulatedPoints += res ? res.Points : 0;
-      }
-      return accumulatedPoints;
-    });
-
-    return {
-      label: driver.name,
-      data: pointsData,
-      borderColor: colors[idx % colors.length],
-      backgroundColor: colors[idx % colors.length],
-      borderWidth: 2,
-      tension: 0.3
-    };
-  });
-
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#94a3b8', font: { size: 11 } } }
-      },
-      scales: {
-        x: { grid: { color: '#2d2d38' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
-        y: { grid: { color: '#2d2d38' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
-      }
+function getFirstAvailableSession(race) {
+    if (race.race?.length) {
+        return 'race';
     }
-  });
+
+    if (race.sprint?.length) {
+        return 'sprint';
+    }
+
+    return 'qualifying';
 }
+
+
+function selectSession(session) {
+    currentSession = session;
+
+    const results = currentRace?.[session] ?? [];
+
+    document
+        .querySelectorAll('.session-tab')
+        .forEach(button => {
+            const active = button.dataset.session === session;
+
+            button.classList.toggle('bg-f1-red', active);
+            button.classList.toggle('text-white', active);
+
+            button.classList.toggle('text-slate-400', !active);
+        });
+
+    renderSession(results, session);
+}
+
+
+function renderSession(results, session) {
+    const title = document.getElementById('session-title');
+
+    title.textContent =
+        `${session.charAt(0).toUpperCase() + session.slice(1)} Classification`;
+
+    document.getElementById('session-description').textContent =
+        `${results.length} drivers classified`;
+
+    const winner = results.find(driver => driver.position === 1);
+
+    document.getElementById('race-winner').textContent =
+        winner?.driver_name ?? '--';
+
+    document
+        .getElementById('race-winner-card')
+        .classList.toggle('hidden', !winner);
+
+    const tbody = document.getElementById('race-table-body');
+
+    tbody.innerHTML = results.map(driver => {
+        const finished = driver.status === 'finished';
+
+        return `
+            <tr class="hover:bg-f1-card/50 transition-colors">
+
+                <td class="py-3 px-3 md:px-4 font-black ${
+                    driver.position <= 3
+                        ? 'text-amber-400'
+                        : 'text-slate-400'
+                }">
+                    ${driver.position}
+                </td>
+
+                <td class="py-3 px-3 md:px-4 font-mono text-slate-500">
+                    ${driver.race_number}
+                </td>
+
+                <td class="py-3 px-3 md:px-4">
+                    <div class="font-bold text-white">
+                        ${driver.driver_name}
+                    </div>
+                </td>
+
+                <td class="py-3 px-3 md:px-4 text-slate-400">
+                    ${driver.team_name}
+                </td>
+
+                <td class="py-3 px-3 md:px-4 text-center font-mono">
+                    ${driver.num_laps}
+                </td>
+
+                <td class="py-3 px-3 md:px-4 font-mono text-xs">
+                    ${driver.best_lap_time}
+                </td>
+
+                <td class="py-3 px-3 md:px-4 font-mono text-xs">
+                    ${driver.total_race_time}
+                </td>
+
+                <td class="py-3 px-3 md:px-4 text-center">
+
+                    <span class="
+                        inline-flex px-2 py-0.5 rounded-full
+                        text-[10px] font-bold
+                        ${
+                            finished
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        }
+                    ">
+                        ${finished ? 'Finished' : 'DNF'}
+                    </span>
+
+                </td>
+
+                <td class="py-3 px-3 md:px-4 text-right font-black ${
+                    driver.points > 0
+                        ? 'text-f1-red'
+                        : 'text-slate-500'
+                }">
+                    ${driver.points}
+                </td>
+
+            </tr>
+        `;
+    }).join('');
+}
+
 
 function updateActiveNav(activeId) {
-  const allBtns = document.querySelectorAll('#sidebar button');
-  allBtns.forEach(btn => {
-    if (btn.id === activeId) {
-      btn.classList.add('bg-f1-red', 'text-white', 'shadow-lg', 'shadow-f1-red/20');
-      btn.classList.remove('text-slate-400', 'hover:bg-f1-card');
-    } else {
-      btn.classList.remove('bg-f1-red', 'text-white', 'shadow-lg', 'shadow-f1-red/20');
-      btn.classList.add('text-slate-400', 'hover:bg-f1-card');
-    }
-  });
+    document
+        .querySelectorAll('#sidebar button')
+        .forEach(button => {
+            const active = button.id === activeId;
+
+            button.classList.toggle('bg-f1-red', active);
+            button.classList.toggle('text-white', active);
+            button.classList.toggle('shadow-lg', active);
+            button.classList.toggle('shadow-f1-red/20', active);
+
+            if (!active) {
+                button.classList.add('text-slate-400');
+                button.classList.remove('text-white');
+            }
+        });
 }

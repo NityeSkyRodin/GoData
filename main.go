@@ -5,9 +5,18 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+
+	"GoData/database"
+	"GoData/exporter"
 )
 
 func main() {
+	db, err := database.InitDB("f2_results.db")
+	if err != nil {
+		fmt.Println("Error initializing database:", err)
+		return
+	}
+	defer db.Close()
 
 	addr, err := net.ResolveUDPAddr("udp", "0.0.0.0:20777")
 	if err != nil {
@@ -27,9 +36,11 @@ func main() {
 	buf := make([]byte, 2048)
 	participants := map[int]Participant{}
 	knownDrivers := 0
+	var participantSessionUID uint64
 	var lastResultUID uint64
-	
-	var currentTrackID int8 = -1 
+
+	var currentTrackID int8 = -1
+	var currentSessionType string = "Unknown"
 
 	for {
 		n, _, err := conn.ReadFromUDP(buf)
@@ -46,20 +57,30 @@ func main() {
 
 		switch header.PacketID {
 
-		case 1:
-			if len(payload) > 2 {
-				currentTrackID = int8(payload[2])
+		case 1: // PACKET_SESSION_DATA
+			if len(payload) >= 9 {
+				sessionTypeID := payload[6]
+				trackID := int8(payload[7])
+
+				currentTrackID = trackID
+				currentSessionType = parseSessionType(sessionTypeID)
 			}
 
 		case 2:
-			fmt.Printf("\r[LAP DATA] Frame: %d | Player Car Index: %d  ", header.FrameIdentifier, header.PlayerCarIndex)
 
 		case 4:
-			if p := parseParticipants(payload); len(p) > 0 {
-				participants = p
-				if knownDrivers != len(p) {
-					knownDrivers = len(p)
-					fmt.Printf("\n[LOBBY] Driverlist data received: %d Drivers\n", len(p))
+			if header.SessionUID != participantSessionUID {
+				participantSessionUID = header.SessionUID
+				p := parseParticipants(payload)
+				if len(p) == 0 {
+					continue
+				}
+
+				participants = mapParticipants(p)
+
+				if knownDrivers != len(participants) {
+					knownDrivers = len(participants)
+					fmt.Printf("\n[LOBBY] Driverlist data received: %d Drivers\n", knownDrivers)
 				}
 			}
 
@@ -68,7 +89,7 @@ func main() {
 				continue
 			}
 
-			result, err := parseFinalClassification(header, payload, participants, currentTrackID)
+			result, err := parseFinalClassification(db, header, payload, participants, currentTrackID, currentSessionType)
 			if err != nil {
 				fmt.Println("\nError parsing final classification:", err)
 				continue
@@ -76,6 +97,78 @@ func main() {
 			lastResultUID = header.SessionUID
 
 			printResult(result)
+
+			if err := exporter.ParseFullSeasonResult(db); err != nil {
+				fmt.Println("Error retrieving season results:", err)
+			}
+
+			if err := exporter.ParseRaceWeekendResults(db, result.TrackName); err != nil {
+				fmt.Println("Error retrieving race weekend results:", err)
+			}
 		}
+	}
+}
+
+func parseSessionType(sessionType uint8) string {
+	switch sessionType {
+	case 5, 6, 7, 8, 9:
+		return "Qualifying"
+	case 15:
+		return "Sprint"
+	case 16:
+		return "Race"
+	default:
+		return "Practice"
+	}
+}
+
+func parseFormula(formula uint8) string {
+	if formula == 2 {
+		return "F2"
+	}
+	return "F1"
+}
+
+func mapParticipants(participants map[int]Participant) map[int]Participant {
+	for index, participant := range participants {
+		fmt.Printf(
+			"Mapping participant: %s | TeamID: %v | Type: %T\n",
+			participant.Name,
+			participant.TeamID,
+			participant.TeamID,
+		)
+
+		participants[index] = participant
+	}
+
+	return participants
+}
+
+func mapTeam(teamID uint8) string {
+	switch teamID {
+	case 209:
+		return "Rodin Motorsport"
+	case 210:
+		return "Van Amersfoort Racing"
+	case 211:
+		return "DAMS Lucas Oil"
+	case 212:
+		return "AIX Racing"
+	case 213:
+		return "Hitech Pulse-Eight"
+	case 214:
+		return "ART Grand Prix"
+	case 215:
+		return "MP Motorsport"
+	case 216:
+		return "Campos Racing"
+	case 217:
+		return "Trident"
+	case 218:
+		return "PREMA Racing"
+	case 219:
+		return "Invicta Racing"
+	default:
+		return "Unknown"
 	}
 }

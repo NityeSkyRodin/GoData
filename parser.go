@@ -2,9 +2,14 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/binary"
 	"fmt"
 	"time"
+
+	"GoData/database"
+	"GoData/tracks"
+
 )
 
 func parseParticipants(payload []byte) map[int]Participant {
@@ -26,16 +31,16 @@ func parseParticipants(payload []byte) map[int]Participant {
 	for i := 0; i < numCars; i++ {
 		rec := body[i*perCar : (i+1)*perCar]
 		out[i] = Participant{
-			DriverID:     int(rec[1]),
-			TeamID:       int(rec[3]),
-			RaceNumber:   int(rec[5]),
-			Name:         cString(rec[7:55]),
+			DriverID:   int(rec[1]),
+			TeamID:     rec[3],
+			RaceNumber: int(rec[5]),
+			Name:       cString(rec[7:55]),
 		}
 	}
 	return out
 }
 
-func parseFinalClassification(header PacketHeader, payload []byte, participants map[int]Participant, currentTrackID int8) (FinalRaceResult, error) {
+func parseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, participants map[int]Participant, currentTrackID int8, currentSessionType string) (FinalRaceResult, error) {
 
 	if currentTrackID == -1 {
 		return FinalRaceResult{}, fmt.Errorf("currentTrackID is not set, cannot determine track name")
@@ -45,7 +50,9 @@ func parseFinalClassification(header PacketHeader, payload []byte, participants 
 		SessionUID:  fmt.Sprintf("%d", header.SessionUID),
 		RecordedAt:  time.Now(),
 		NumCars:     0,
+		TrackName:   track.Name(currentTrackID),
 		Drivers:     []DriverResult{},
+		SessionType: currentSessionType,
 	}
 
 	if len(payload) < 1 {
@@ -54,7 +61,7 @@ func parseFinalClassification(header PacketHeader, payload []byte, participants 
 
 	numCars := int(payload[0])
 	body := payload[1:]
-	perCar  := len(body) / maxCars
+	perCar := len(body) / maxCars
 
 	headSize := binary.Size(classificationHead{})
 	tailSize := binary.Size(classificationTail{})
@@ -70,7 +77,6 @@ func parseFinalClassification(header PacketHeader, payload []byte, participants 
 	}
 
 	result.NumCars = numCars
-
 
 	for i := 0; i < numCars; i++ {
 		rec := bytes.NewReader(body[i*perCar : (i+1)*perCar])
@@ -93,26 +99,40 @@ func parseFinalClassification(header PacketHeader, payload []byte, participants 
 			return result, err
 		}
 
-
-result.Drivers = append(result.Drivers, DriverResult{
-    Position:         int(head.Position),
-    RaceNumber:       participants[i].RaceNumber,
-    Name:             participants[i].Name,
-    NumLaps:          int(head.NumLaps), // <-- Deze toevoegen!
-    TotalRaceTime:    formatRaceTime(tail.TotalRaceTime),
-    BestLapTime:      formatLapTime(tail.BestLapTimeInMS),
-    Points:           int(head.Points),
-    ResultStatusText: resultStatusName(head.ResultStatus),
-})
+		result.Drivers = append(result.Drivers, DriverResult{
+			Position:         int(head.Position),
+			RaceNumber:       participants[i].RaceNumber,
+			Name:             participants[i].Name,
+			NumLaps:          int(head.NumLaps),
+			TotalRaceTime:    formatRaceTime(tail.TotalRaceTime),
+			BestLapTime:      formatLapTime(tail.BestLapTimeInMS),
+			Points:           int(head.Points),
+			ResultStatusText: resultStatusName(head.ResultStatus),
+			TeamName:         mapTeam(participants[i].TeamID),
+		})
 	}
 
-	database, err := InitDB("f2_results.db")
-	if err != nil {
-		return result, fmt.Errorf("error initializing database: %w", err)
+	databaseResult := database.RaceResult{
+		SessionUID:  result.SessionUID,
+		SessionType: result.SessionType,
+	}
+	for _, driver := range result.Drivers {
+		databaseResult.Drivers = append(databaseResult.Drivers, database.DriverResult{
+			Position:         driver.Position,
+			RaceNumber:       driver.RaceNumber,
+			Name:             driver.Name,
+			NumLaps:          driver.NumLaps,
+			TotalRaceTime:    driver.TotalRaceTime,
+			BestLapTime:      driver.BestLapTime,
+			Points:           driver.Points,
+			ResultStatusText: driver.ResultStatusText,
+			TeamName:         driver.TeamName,
+		})
 	}
 
-	SaveRaceResult(database, result, currentTrackID)
-
+	if err := database.SaveRaceResult(db, databaseResult, currentTrackID); err != nil {
+		return result, err
+	}
 
 	return result, nil
 }

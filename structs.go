@@ -22,7 +22,7 @@ type PacketHeader struct {
 
 type classificationHead struct {
 	Position     uint8
-	NumLaps       uint8
+	NumLaps      uint8
 	GridPosition uint8
 	Points       uint8
 	NumPitStops  uint8
@@ -41,10 +41,10 @@ type classificationTail struct {
 }
 
 type Participant struct {
-	Name         string
-	RaceNumber   int
-	TeamID       int
-	DriverID     int
+	Name       string
+	RaceNumber int
+	TeamID     uint8
+	DriverID   int
 }
 
 type DriverResult struct {
@@ -52,15 +52,18 @@ type DriverResult struct {
 	RaceNumber       int
 	Name             string
 	NumLaps          int
-	TotalRaceTime    string 
-	BestLapTime      string 
+	TotalRaceTime    string
+	BestLapTime      string
 	Points           int
 	ResultStatusText string
+	TeamName         string
 }
 
 type FinalRaceResult struct {
-	SessionUID string
-	RecordedAt time.Time
-	NumCars    int
-	Drivers    []DriverResult 
+	SessionUID  string
+	RecordedAt  time.Time
+	NumCars     int
+	SessionType string
+	TrackName   string
+	Drivers     []DriverResult
 }
