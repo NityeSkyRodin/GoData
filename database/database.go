@@ -29,10 +29,10 @@ type RaceResult struct {
 }
 
 type FullSeasonResult struct {
-	DriverNumber int
-	DriverName   string
-	TeamName     string
-	Points       int
+    DriverNumber int    `json:"driver_number"`
+    DriverName   string `json:"driver_name"`
+    TeamName     string `json:"team_name"`
+    Points       int    `json:"points"`
 }
 
 type RaceWeekend struct {

@@ -1,0 +1,134 @@
+[
+  {
+    "driver_number": 10,
+    "driver_name": "MINÌ",
+    "team_name": "Campos Racing",
+    "points": 25
+  },
+  {
+    "driver_number": 4,
+    "driver_name": "LINDBLAD",
+    "team_name": "Van Amersfoort Racing",
+    "points": 19
+  },
+  {
+    "driver_number": 5,
+    "driver_name": "GOETHE",
+    "team_name": "MP Motorsport",
+    "points": 15
+  },
+  {
+    "driver_number": 2,
+    "driver_name": "STANĚK",
+    "team_name": "Invicta Racing",
+    "points": 14
+  },
+  {
+    "driver_number": 12,
+    "driver_name": "MAINI",
+    "team_name": "Hitech Pulse-Eight",
+    "points": 14
+  },
+  {
+    "driver_number": 6,
+    "driver_name": "VERSCHOOR",
+    "team_name": "MP Motorsport",
+    "points": 13
+  },
+  {
+    "driver_number": 20,
+    "driver_name": "DÜRKSEN",
+    "team_name": "AIX Racing",
+    "points": 13
+  },
+  {
+    "driver_number": 16,
+    "driver_name": "CORDEEL",
+    "team_name": "DAMS Lucas Oil",
+    "points": 11
+  },
+  {
+    "driver_number": 7,
+    "driver_name": "BROWNING",
+    "team_name": "ART Grand Prix",
+    "points": 11
+  },
+  {
+    "driver_number": 14,
+    "driver_name": "MARTINS",
+    "team_name": "Rodin Motorsport",
+    "points": 8
+  },
+  {
+    "driver_number": 15,
+    "driver_name": "MIYATA",
+    "team_name": "Rodin Motorsport",
+    "points": 1
+  },
+  {
+    "driver_number": 25,
+    "driver_name": "VILLAGÓMEZ",
+    "team_name": "PREMA Racing",
+    "points": 0
+  },
+  {
+    "driver_number": 21,
+    "driver_name": "SHIELDS",
+    "team_name": "AIX Racing",
+    "points": 0
+  },
+  {
+    "driver_number": 9,
+    "driver_name": "MONTOYA",
+    "team_name": "Campos Racing",
+    "points": 0
+  },
+  {
+    "driver_number": 22,
+    "driver_name": "MEGUETOUNIF",
+    "team_name": "Trident",
+    "points": 0
+  },
+  {
+    "driver_number": 3,
+    "driver_name": "MARTÍ",
+    "team_name": "Van Amersfoort Racing",
+    "points": 0
+  },
+  {
+    "driver_number": 1,
+    "driver_name": "FORNAROLI",
+    "team_name": "Invicta Racing",
+    "points": 0
+  },
+  {
+    "driver_number": 23,
+    "driver_name": "ESTERSON",
+    "team_name": "Trident",
+    "points": 0
+  },
+  {
+    "driver_number": 17,
+    "driver_name": "DUNNE",
+    "team_name": "DAMS Lucas Oil",
+    "points": 0
+  },
+  {
+    "driver_number": 11,
+    "driver_name": "CRAWFORD",
+    "team_name": "Hitech Pulse-Eight",
+    "points": 0
+  },
+  {
+    "driver_number": 24,
+    "driver_name": "BENNETT",
+    "team_name": "PREMA Racing",
+    "points": 0
+  },
+  {
+    "driver_number": 8,
+    "driver_name": "BEGANOVIC",
+    "team_name": "ART Grand Prix",
+    "points": 0
+  }
+]
