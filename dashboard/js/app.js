@@ -76,6 +76,9 @@ function setupSidebar() {
         `;
 
         button.addEventListener('click', () => {
+
+                console.log('Race object:', race);
+    console.log('Race file:', race.file);
             loadRace(race);
         });
 
