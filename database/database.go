@@ -282,7 +282,7 @@ func GetRaceIndex(db *sql.DB) ([]RaceIndex, error) {
             return nil, err
         }
 
-        race.File =race.TrackName + ".json"
+        race.File = strings.ToLower(race.TrackName) + ".json"
         races = append(races, race)
     }
 

@@ -3,6 +3,7 @@ package exporter
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"GoData/database"
 )
@@ -17,7 +18,7 @@ func ParseRaceWeekendResults(db *sql.DB, trackName string) error {
 
 	fmt.Printf("Race Weekend Results for %s:\n%v\n", trackName, weekendResults)
 
-	err = ParseToJSONFile(weekendResults, fmt.Sprintf("data/races/%s.json", trackName))
+	err = ParseToJSONFile(weekendResults, fmt.Sprintf("data/races/%s.json", strings.ToLower(trackName)))
 	if err != nil {
 		return err
 	}
