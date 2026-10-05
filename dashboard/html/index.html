@@ -1,325 +1,1697 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>F2 Championship</title>
+    <title>F2 Telemetry</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        f1: {
-                            red: '#e10600',
-                            dark: '#15151e',
-                            card: '#1f1f27',
-                            border: '#2d2d38'
-                        }
-                    }
-                }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #090a0c;
+            --surface: #101216;
+            --surface-2: #15171c;
+            --border: #25282f;
+            --muted: #747983;
+            --red: #e10600;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .heading {
+            font-family: 'Barlow Condensed', sans-serif;
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        .scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #30333a;
+            border-radius: 999px;
+        }
+
+        .driver-row {
+            transition: background .15s ease;
+        }
+
+        .driver-row:hover {
+            background: rgba(255, 255, 255, .025);
+        }
+
+        .race-button {
+            transition: all .15s ease;
+        }
+
+        .race-button:hover {
+            background: #15171c;
+            color: #fff;
+        }
+
+        .fade-in {
+            animation: fadeIn .2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-    </script>
 
-<link rel="stylesheet" href="./css/styles.css">
+        .rank {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: #555961;
+        }
+
+        .rank.first {
+            color: #fff;
+        }
+
+        .session-tab {
+            transition: all .15s ease;
+        }
+    </style>
 </head>
 
-<body class="h-full flex flex-col md:flex-row overflow-hidden font-sans antialiased bg-slate-950">
 
-<!-- Mobile header -->
-<div class="md:hidden flex items-center justify-between bg-f1-dark px-4 py-3 border-b border-f1-border z-50 shrink-0">
-    <div class="flex items-center gap-3">
-        <span class="bg-f1-red text-white text-xs font-black px-2 py-1 rounded tracking-wider">
-            F2
-        </span>
+<body class="min-h-screen">
 
-        <span class="font-bold tracking-tight text-sm text-white">
-            CHAMPIONSHIP
-        </span>
+
+<!-- =========================================================
+     MOBILE HEADER
+========================================================= -->
+
+<header
+    class="lg:hidden sticky top-0 z-50 bg-[#090a0c]/95 backdrop-blur border-b border-[#25282f]"
+>
+
+    <div class="h-16 px-5 flex items-center justify-between">
+
+        <button
+            type="button"
+            onclick="showOverview()"
+            class="text-left"
+        >
+
+            <div class="heading text-xl font-black">
+                F2<span class="text-red-600">.</span>TELEMETRY
+            </div>
+
+            <div class="text-[9px] uppercase tracking-[.25em] text-gray-500">
+                Private League
+            </div>
+
+        </button>
+
+
+        <button
+            type="button"
+            onclick="toggleMobileMenu()"
+            class="w-10 h-10 rounded-lg bg-[#15171c] border border-[#25282f] flex items-center justify-center"
+            aria-label="Open menu"
+        >
+            <span class="text-lg">☰</span>
+        </button>
+
     </div>
 
-    <button
-        id="mobile-menu-btn"
-        class="p-2 text-slate-400 hover:text-white"
-    >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-    </button>
+</header>
+
+
+<!-- =========================================================
+     MOBILE MENU
+========================================================= -->
+
+<div
+    id="mobile-menu"
+    class="hidden lg:hidden fixed inset-0 z-40 bg-[#090a0c] pt-20 overflow-y-auto"
+>
+
+    <div class="px-5 py-6">
+
+        <div class="text-[9px] uppercase tracking-[.25em] text-gray-600 font-bold mb-3">
+            Championship
+        </div>
+
+        <button
+            type="button"
+            onclick="showOverview(); closeMobileMenu()"
+            class="w-full text-left px-4 py-4 rounded-lg bg-[#15171c] text-white"
+        >
+            Overview
+        </button>
+
+
+        <div class="text-[9px] uppercase tracking-[.25em] text-gray-600 font-bold mt-8 mb-3">
+            Race Weekends
+        </div>
+
+        <div id="mobile-race-list" class="space-y-1">
+            <!-- Populated by JavaScript -->
+        </div>
+
+    </div>
+
 </div>
 
 
-<!-- Sidebar -->
-<aside
-    id="sidebar"
-    class="fixed inset-y-0 left-0 z-40 w-64 bg-f1-dark border-r border-f1-border
-           flex flex-col transform -translate-x-full md:relative md:translate-x-0
-           transition-transform duration-200 ease-in-out shrink-0"
->
-
-    <!-- Logo -->
-    <div class="hidden md:flex items-center gap-3 p-5 border-b border-f1-border">
-        <div class="bg-f1-red text-white font-black px-2 py-1 rounded text-sm tracking-wider">
-            F2
-        </div>
-
-        <div>
-            <h1 class="font-bold tracking-wider text-sm leading-none text-white">
-                CHAMPIONSHIP
-            </h1>
-
-            <span class="text-[10px] text-slate-400 font-mono">
-                SEASON OVERVIEW
-            </span>
-        </div>
-    </div>
+<div class="min-h-screen lg:flex">
 
 
-    <!-- Navigation -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-6">
+    <!-- =====================================================
+         DESKTOP SIDEBAR
+    ====================================================== -->
 
-        <div>
-            <div class="text-[11px] font-bold text-slate-400 tracking-wider uppercase mb-2 px-2">
-                General
+    <aside
+        class="hidden lg:flex w-64 xl:w-72 flex-col border-r border-[#25282f] bg-[#0c0d10] fixed inset-y-0 left-0"
+    >
+
+        <button
+            type="button"
+            onclick="showOverview()"
+            class="px-7 py-7 border-b border-[#25282f] text-left"
+        >
+
+            <div class="heading text-3xl font-black">
+                F2<span class="text-red-600">.</span>TELEMETRY
             </div>
+
+            <div class="mt-1 text-[10px] uppercase tracking-[.3em] text-gray-500">
+                Private League
+            </div>
+
+        </button>
+
+
+        <nav class="p-4">
+
+            <div class="text-[9px] uppercase tracking-[.25em] text-gray-600 font-bold px-3 py-3">
+                Championship
+            </div>
+
 
             <button
                 id="nav-overview"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
-                       bg-f1-red text-white font-medium text-sm
-                       transition-all shadow-lg shadow-f1-red/20"
+                type="button"
+                onclick="showOverview()"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-lg bg-red-600 text-white text-sm font-semibold"
             >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M3 13h4v8H3zM10 3h4v18h-4zM17 8h4v13h-4z"/>
-                </svg>
-
-                <span>Championship</span>
+                <span>◉</span>
+                Overview
             </button>
-        </div>
 
 
-        <div>
-            <div class="text-[11px] font-bold text-slate-400 tracking-wider uppercase mb-2 px-2">
-                Completed Races
+            <div class="text-[9px] uppercase tracking-[.25em] text-gray-600 font-bold px-3 pt-8 pb-3">
+                Race Weekends
             </div>
+
 
             <div
-                id="race-list"
+                id="desktop-race-list"
                 class="space-y-1"
-            ></div>
-        </div>
+            >
+                <!-- Populated by JavaScript -->
+            </div>
 
-    </div>
-</aside>
+        </nav>
 
 
-<!-- Main -->
-<main class="flex-1 overflow-y-auto p-4 md:p-8">
+        <div class="mt-auto p-5 border-t border-[#25282f]">
 
-    <!-- Championship -->
-    <section
-        id="view-overview"
-        class="space-y-6 max-w-7xl mx-auto"
-    >
+            <div class="text-[9px] uppercase tracking-widest text-gray-600">
+                Data source
+            </div>
 
-        <div class="border-b border-f1-border pb-5">
-            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+            <div class="text-xs font-semibold mt-1">
+                F1 25 Telemetry
+            </div>
 
-                <div>
-                    <div class="text-[10px] font-bold text-f1-red uppercase tracking-widest mb-1">
-                        F2 Championship
-                    </div>
+            <div class="flex items-center gap-2 mt-3 text-[10px] text-gray-500">
 
-                    <h2 class="text-3xl md:text-4xl font-black tracking-tight text-white">
-                        Championship Standings
-                    </h2>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
 
-                    <p class="text-sm text-slate-400 mt-1">
-                        Current season standings
-                    </p>
-                </div>
-
-                <div
-                    id="season-status"
-                    class="text-xs text-slate-500 font-mono"
-                >
-                    Loading...
-                </div>
+                Local data collector
 
             </div>
+
         </div>
 
+    </aside>
 
-        <!-- Stats -->
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="lg:ml-64 xl:ml-72 flex-1">
+
+
+        <!-- DESKTOP TOP BAR -->
+
         <div
-            id="stats-cards"
-            class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
-        ></div>
+            class="hidden lg:flex h-16 border-b border-[#25282f] items-center justify-between px-8"
+        >
 
-
-        <!-- Standings -->
-        <div class="bg-f1-card rounded-xl border border-f1-border overflow-hidden shadow-xl">
-
-            <div class="px-4 md:px-6 py-4 border-b border-f1-border">
-                <h3 class="font-bold text-sm text-slate-200">
-                    Driver Standings
-                </h3>
+            <div
+                id="breadcrumb"
+                class="text-xs text-gray-500"
+            >
+                F2 LEAGUE
+                <span class="mx-2 text-gray-700">/</span>
+                CHAMPIONSHIP
             </div>
 
-            <div class="overflow-x-auto">
 
-                <table class="w-full text-left text-xs md:text-sm whitespace-nowrap">
-
-                    <thead class="bg-f1-dark text-slate-400 uppercase text-[10px] md:text-[11px] font-bold tracking-wider">
-
-                    <tr>
-                        <th class="py-3 px-4">Pos</th>
-                        <th class="py-3 px-4">Driver</th>
-                        <th class="py-3 px-4">Team</th>
-                        <th class="py-3 px-4 text-right">Points</th>
-                    </tr>
-
-                    </thead>
-
-                    <tbody
-                        id="standings-table-body"
-                        class="divide-y divide-f1-border/50 text-slate-300"
-                    ></tbody>
-
-                </table>
-
+            <div
+                id="year-label"
+                class="text-[10px] uppercase tracking-widest text-gray-600"
+            >
+                2026
             </div>
+
         </div>
 
-    </section>
+
+        <div class="max-w-[1500px] mx-auto px-5 py-7 lg:px-8 lg:py-10">
 
 
-    <!-- Race -->
-    <section
-        id="view-race"
-        class="hidden space-y-6 max-w-7xl mx-auto"
-    >
+            <!-- =================================================
+                 OVERVIEW VIEW
+            ================================================== -->
 
-        <!-- Race header -->
-        <div class="bg-f1-card p-5 md:p-6 rounded-xl border border-f1-border shadow-xl">
+            <section
+                id="overview-view"
+                class="fade-in"
+            >
 
-            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <!-- HERO -->
 
-                <div>
+                <div class="mb-10">
 
-                    <div class="text-[10px] font-bold text-f1-red uppercase tracking-widest mb-1">
-                        Race Weekend
+                    <div class="flex items-center gap-3 mb-3">
+
+                        <span class="px-2.5 py-1 rounded bg-red-600 text-[9px] font-bold uppercase tracking-widest">
+                            Season 2026
+                        </span>
+
+                        <span
+                            id="race-count-label"
+                            class="text-[10px] uppercase tracking-widest text-gray-600"
+                        >
+                            Loading races...
+                        </span>
+
                     </div>
 
-                    <h2
-                        id="race-title"
-                        class="text-3xl md:text-4xl font-black text-white tracking-tight"
-                    >
-                        --
-                    </h2>
 
-                    <p
-                        id="race-subtitle"
-                        class="text-sm text-slate-400 mt-1"
+                    <h1
+                        class="heading text-6xl sm:text-7xl lg:text-8xl font-black uppercase leading-[.8] tracking-tight"
                     >
-                        --
+                        Championship
+                    </h1>
+
+
+                    <p class="text-gray-500 text-sm mt-5 max-w-xl">
+                        Personal F2 league telemetry collected directly from F1 25.
+                        Results and championship standings from your completed races.
                     </p>
 
                 </div>
 
 
-                <div
-                    id="race-winner-card"
-                    class="hidden md:block bg-f1-dark px-5 py-3 rounded-lg border border-f1-border"
+                <!-- STATS -->
+
+                <section
+                    class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[#25282f] border border-[#25282f] mb-10"
                 >
-                    <div class="text-[10px] text-slate-500 uppercase font-bold">
-                        Race Winner
+
+                    <div class="bg-[#101216] p-5 lg:p-6">
+
+                        <div class="text-[9px] uppercase tracking-[.2em] text-gray-600">
+                            Races
+                        </div>
+
+                        <div
+                            id="stat-races"
+                            class="heading text-4xl font-black mt-2"
+                        >
+                            -
+                        </div>
+
+                        <div class="text-[10px] text-gray-500 mt-1">
+                            Completed
+                        </div>
+
                     </div>
+
+
+                    <div class="bg-[#101216] p-5 lg:p-6">
+
+                        <div class="text-[9px] uppercase tracking-[.2em] text-gray-600">
+                            Drivers
+                        </div>
+
+                        <div
+                            id="stat-drivers"
+                            class="heading text-4xl font-black mt-2"
+                        >
+                            -
+                        </div>
+
+                        <div class="text-[10px] text-gray-500 mt-1">
+                            Championship
+                        </div>
+
+                    </div>
+
+
+                    <div class="bg-[#101216] p-5 lg:p-6">
+
+                        <div class="text-[9px] uppercase tracking-[.2em] text-gray-600">
+                            Leader
+                        </div>
+
+                        <div
+                            id="stat-leader-points"
+                            class="heading text-4xl font-black mt-2"
+                        >
+                            -
+                        </div>
+
+                        <div class="text-[10px] text-gray-500 mt-1">
+                            Points
+                        </div>
+
+                    </div>
+
+
+                    <div class="bg-[#101216] p-5 lg:p-6">
+
+                        <div class="text-[9px] uppercase tracking-[.2em] text-gray-600">
+                            Latest
+                        </div>
+
+                        <div
+                            id="stat-latest"
+                            class="heading text-4xl font-black mt-2 truncate"
+                        >
+                            -
+                        </div>
+
+                        <div class="text-[10px] text-gray-500 mt-1">
+                            Race weekend
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CHAMPIONSHIP -->
+
+                <section class="bg-[#101216] border border-[#25282f]">
 
                     <div
-                        id="race-winner"
-                        class="font-bold text-white mt-0.5"
+                        class="px-5 lg:px-7 py-5 border-b border-[#25282f] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                     >
-                        --
+
+                        <div>
+
+                            <div class="heading text-2xl font-black uppercase">
+                                Driver Standings
+                            </div>
+
+                            <div class="text-[10px] uppercase tracking-widest text-gray-600 mt-1">
+                                Full championship
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="standings-count"
+                            class="text-[10px] uppercase tracking-widest text-gray-600"
+                        >
+                            -
+                        </div>
+
                     </div>
-                </div>
-
-            </div>
-
-        </div>
 
 
-        <!-- Session tabs -->
-        <div
-            id="session-tabs"
-            class="flex gap-2 overflow-x-auto"
-        ></div>
+                    <div class="overflow-x-auto scrollbar">
+
+                        <table class="w-full min-w-[600px]">
+
+                            <thead>
+
+                                <tr class="text-[9px] uppercase tracking-[.2em] text-gray-600 border-b border-[#25282f]">
+
+                                    <th class="text-left px-5 lg:px-7 py-4">
+                                        Pos
+                                    </th>
+
+                                    <th class="text-left py-4">
+                                        Driver
+                                    </th>
+
+                                    <th class="text-left py-4">
+                                        Team
+                                    </th>
+
+                                    <th class="text-right px-5 lg:px-7 py-4">
+                                        Points
+                                    </th>
+
+                                </tr>
+
+                            </thead>
 
 
-        <!-- Classification -->
-        <div class="bg-f1-card rounded-xl border border-f1-border overflow-hidden shadow-xl">
+                            <tbody id="standings-table">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
 
-            <div class="px-4 md:px-6 py-4 border-b border-f1-border flex items-center justify-between">
+                        </table>
 
-                <div>
-                    <h3
-                        id="session-title"
-                        class="font-bold text-sm text-slate-200"
+                    </div>
+
+                </section>
+
+
+                <!-- RACE WEEKENDS -->
+
+                <section class="mt-6 bg-[#101216] border border-[#25282f]">
+
+                    <div class="px-5 lg:px-7 py-5 border-b border-[#25282f]">
+
+                        <div class="heading text-2xl font-black uppercase">
+                            Race Weekends
+                        </div>
+
+                        <div class="text-[10px] uppercase tracking-widest text-gray-600 mt-1">
+                            Completed sessions
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="overview-race-list"
+                        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-px bg-[#25282f]"
                     >
-                        Race Classification
-                    </h3>
+                        <!-- Populated by JavaScript -->
+                    </div>
 
-                    <p
-                        id="session-description"
-                        class="text-[11px] text-slate-500 mt-0.5"
-                    ></p>
+                </section>
+
+            </section>
+
+
+            <!-- =================================================
+                 RACE VIEW
+            ================================================== -->
+
+            <section
+                id="race-view"
+                class="hidden fade-in"
+            >
+
+                <button
+                    type="button"
+                    onclick="showOverview()"
+                    class="text-[10px] uppercase tracking-widest text-gray-600 hover:text-white mb-8"
+                >
+                    ← Back to championship
+                </button>
+
+
+                <!-- RACE HEADER -->
+
+                <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+
+                    <div>
+
+                        <div class="flex items-center gap-3 mb-3">
+
+                            <span class="px-2.5 py-1 bg-red-600 text-[9px] font-bold uppercase tracking-widest">
+                                Race Weekend
+                            </span>
+
+                            <span
+                                id="race-round"
+                                class="text-[10px] uppercase tracking-widest text-gray-600"
+                            >
+                                -
+                            </span>
+
+                        </div>
+
+
+                        <h1
+                            id="race-title"
+                            class="heading text-6xl sm:text-7xl lg:text-8xl font-black uppercase leading-[.8]"
+                        >
+                            -
+                        </h1>
+
+
+                        <div class="text-xs text-gray-500 mt-5">
+                            F1 25 · F2 · Personal League
+                        </div>
+
+                    </div>
+
+
+                    <div class="md:text-right">
+
+                        <div class="text-[9px] uppercase tracking-[.25em] text-gray-600">
+                            Winner
+                        </div>
+
+                        <div
+                            id="race-winner"
+                            class="heading text-4xl font-black mt-1"
+                        >
+                            -
+                        </div>
+
+                        <div
+                            id="race-winner-points"
+                            class="text-red-500 text-sm font-bold"
+                        >
+                            -
+                        </div>
+
+                    </div>
+
                 </div>
 
+
+                <!-- SESSION TABS -->
+
+                <div
+                    id="session-tabs"
+                    class="flex gap-1 border-b border-[#25282f] mb-6 overflow-x-auto"
+                >
+                    <!-- Populated by JavaScript -->
+                </div>
+
+
+                <!-- CLASSIFICATION -->
+
+                <section class="bg-[#101216] border border-[#25282f]">
+
+                    <div class="px-5 lg:px-7 py-5 border-b border-[#25282f]">
+
+                        <div
+                            id="session-title"
+                            class="heading text-2xl font-black uppercase"
+                        >
+                            Classification
+                        </div>
+
+                        <div
+                            id="session-description"
+                            class="text-[10px] uppercase tracking-widest text-gray-600 mt-1"
+                        >
+                            -
+                        </div>
+
+                    </div>
+
+
+                    <div class="overflow-x-auto scrollbar">
+
+                        <table class="w-full min-w-[850px]">
+
+                            <thead>
+
+                                <tr class="text-[9px] uppercase tracking-[.2em] text-gray-600 border-b border-[#25282f]">
+
+                                    <th class="text-left px-5 lg:px-7 py-4">
+                                        Pos
+                                    </th>
+
+                                    <th class="text-left py-4">
+                                        #
+                                    </th>
+
+                                    <th class="text-left py-4">
+                                        Driver
+                                    </th>
+
+                                    <th class="text-left py-4">
+                                        Team
+                                    </th>
+
+                                    <th class="text-center py-4">
+                                        Laps
+                                    </th>
+
+                                    <th class="text-left py-4">
+                                        Best Lap
+                                    </th>
+
+                                    <th class="text-left py-4">
+                                        Time
+                                    </th>
+
+                                    <th class="text-left py-4">
+                                        Status
+                                    </th>
+
+                                    <th class="text-right px-5 lg:px-7 py-4">
+                                        Points
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="race-table">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <!-- ERROR -->
+
+            <div
+                id="error-view"
+                class="hidden bg-[#101216] border border-red-900/50 p-6"
+            >
+
+                <div class="heading text-2xl font-black uppercase text-red-500">
+                    Unable to load telemetry
+                </div>
+
+                <p
+                    id="error-message"
+                    class="text-sm text-gray-500 mt-2"
+                ></p>
+
             </div>
 
 
-            <div class="overflow-x-auto">
+            <footer
+                class="mt-12 pt-6 border-t border-[#25282f] flex flex-col sm:flex-row justify-between gap-3 text-[9px] uppercase tracking-widest text-gray-700"
+            >
 
-                <table class="w-full text-left text-xs md:text-sm whitespace-nowrap">
+                <span>
+                    F2 Telemetry · Private League
+                </span>
 
-                    <thead class="bg-f1-dark text-slate-400 uppercase text-[10px] md:text-[11px] font-bold tracking-wider">
+                <span>
+                    Data collected from F1 25
+                </span>
 
-                    <tr>
-                        <th class="py-3 px-3 md:px-4">Pos</th>
-                        <th class="py-3 px-3 md:px-4">No</th>
-                        <th class="py-3 px-3 md:px-4">Driver</th>
-                        <th class="py-3 px-3 md:px-4">Team</th>
-                        <th class="py-3 px-3 md:px-4 text-center">Laps</th>
-                        <th class="py-3 px-3 md:px-4">Best Lap</th>
-                        <th class="py-3 px-3 md:px-4">Time</th>
-                        <th class="py-3 px-3 md:px-4 text-center">Status</th>
-                        <th class="py-3 px-3 md:px-4 text-right">Pts</th>
-                    </tr>
-
-                    </thead>
-
-                    <tbody
-                        id="race-table-body"
-                        class="divide-y divide-f1-border/50 text-slate-300"
-                    ></tbody>
-
-                </table>
-
-            </div>
+            </footer>
 
         </div>
 
-    </section>
+    </main>
 
-</main>
+</div>
 
 
-<script src="./js/app.js"></script>
+<script>
+
+    /*
+     * =========================================================
+     * STATE
+     * =========================================================
+     */
+
+    let championship = [];
+    let raceIndex = [];
+    let currentRace = null;
+    let currentSession = null;
+
+
+    /*
+     * =========================================================
+     * INITIALIZATION
+     * =========================================================
+     */
+
+    document.addEventListener('DOMContentLoaded', init);
+
+
+    async function init() {
+
+        try {
+
+            await loadChampionship();
+            await loadRaceIndex();
+
+            renderOverview();
+            renderRaceNavigation();
+
+        } catch (error) {
+
+            console.error(
+                'Failed to initialize dashboard:',
+                error
+            );
+
+            showError(error.message);
+
+        }
+
+    }
+
+
+    /*
+     * =========================================================
+     * DATA
+     * =========================================================
+     */
+
+    async function loadChampionship() {
+
+        const response = await fetch(
+            './data/championship.json'
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                'Could not load data/championship.json'
+            );
+
+        }
+
+        championship = await response.json();
+
+    }
+
+
+    async function loadRaceIndex() {
+
+        const response = await fetch(
+            './data/races/index.json'
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                'Could not load data/races/index.json'
+            );
+
+        }
+
+        raceIndex = await response.json();
+
+    }
+
+
+    async function loadRace(race) {
+
+        const response = await fetch(
+            `./data/races/${race.file}`
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Could not load data/races/${race.file}`
+            );
+
+        }
+
+        return await response.json();
+
+    }
+
+
+    /*
+     * =========================================================
+     * OVERVIEW
+     * =========================================================
+     */
+
+    function renderOverview() {
+
+        showOverviewView();
+
+        renderStats();
+        renderStandings();
+        renderOverviewRaces();
+
+    }
+
+
+    function renderStats() {
+
+        const leader = championship[0];
+
+        document.getElementById('stat-races').textContent =
+            String(raceIndex.length).padStart(2, '0');
+
+
+        document.getElementById('stat-drivers').textContent =
+            String(championship.length).padStart(2, '0');
+
+
+        document.getElementById('stat-leader-points').textContent =
+            leader?.points ?? 0;
+
+
+        const latestRace =
+            raceIndex[raceIndex.length - 1];
+
+        document.getElementById('stat-latest').textContent =
+            latestRace?.track_name ?? '-';
+
+
+        document.getElementById('race-count-label').textContent =
+            `${raceIndex.length} race${raceIndex.length === 1 ? '' : 's'} completed`;
+
+
+        document.getElementById('standings-count').textContent =
+            `${championship.length} drivers`;
+
+    }
+
+
+    function renderStandings() {
+
+        const table =
+            document.getElementById('standings-table');
+
+
+        if (!championship.length) {
+
+            table.innerHTML = `
+                <tr>
+                    <td
+                        colspan="4"
+                        class="px-5 py-8 text-center text-sm text-gray-600"
+                    >
+                        No championship data available.
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+
+        table.innerHTML = championship
+            .map((driver, index) => {
+
+                return `
+                    <tr class="driver-row border-b border-[#1d2025]">
+
+                        <td class="px-5 lg:px-7 py-5">
+                            <span class="
+                                rank
+                                ${index === 0 ? 'first' : ''}
+                            ">
+                                ${String(index + 1).padStart(2, '0')}
+                            </span>
+                        </td>
+
+
+                        <td class="py-5">
+
+                            <div class="font-bold text-sm">
+                                ${escapeHtml(driver.driver_name)}
+                            </div>
+
+                            <div class="text-[9px] text-gray-600 mt-1">
+                                #${driver.driver_number ?? '-'}
+                            </div>
+
+                        </td>
+
+
+                        <td class="py-5 text-xs text-gray-500">
+                            ${escapeHtml(driver.team_name ?? '-')}
+                        </td>
+
+
+                        <td class="px-5 lg:px-7 py-5 text-right">
+
+                            <span class="heading text-2xl font-black">
+                                ${driver.points ?? 0}
+                            </span>
+
+                        </td>
+
+                    </tr>
+                `;
+
+            })
+            .join('');
+
+    }
+
+
+    function renderOverviewRaces() {
+
+        const container =
+            document.getElementById('overview-race-list');
+
+
+        if (!raceIndex.length) {
+
+            container.innerHTML = `
+                <div class="bg-[#101216] p-6 text-sm text-gray-600">
+                    No race weekends available.
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        container.innerHTML = raceIndex
+            .map((race, index) => {
+
+                return `
+                    <button
+                        type="button"
+                        onclick="openRace(${index})"
+                        class="
+                            race-button
+                            bg-[#101216]
+                            p-5
+                            lg:p-6
+                            text-left
+                            hover:bg-[#15171c]
+                        "
+                    >
+
+                        <div class="flex items-center justify-between">
+
+                            <div>
+
+                                <div class="
+                                    text-[9px]
+                                    uppercase
+                                    tracking-widest
+                                    text-gray-600
+                                ">
+                                    Round ${String(index + 1).padStart(2, '0')}
+                                </div>
+
+
+                                <div class="
+                                    heading
+                                    text-3xl
+                                    font-black
+                                    uppercase
+                                    mt-1
+                                ">
+                                    ${escapeHtml(race.track_name)}
+                                </div>
+
+                            </div>
+
+
+                            <span class="text-gray-600 text-lg">
+                                →
+                            </span>
+
+                        </div>
+
+                    </button>
+                `;
+
+            })
+            .join('');
+
+    }
+
+
+    /*
+     * =========================================================
+     * RACE NAVIGATION
+     * =========================================================
+     */
+
+    function renderRaceNavigation() {
+
+        const desktop =
+            document.getElementById('desktop-race-list');
+
+        const mobile =
+            document.getElementById('mobile-race-list');
+
+
+        const html = raceIndex
+            .map((race, index) => {
+
+                return `
+                    <button
+                        type="button"
+                        onclick="openRace(${index}); closeMobileMenu()"
+                        class="
+                            race-button
+                            w-full
+                            text-left
+                            px-3
+                            py-2.5
+                            rounded-lg
+                            text-gray-500
+                            text-sm
+                        "
+                    >
+                        ${escapeHtml(race.track_name)}
+                    </button>
+                `;
+
+            })
+            .join('');
+
+
+        desktop.innerHTML = html;
+        mobile.innerHTML = html;
+
+    }
+
+
+    /*
+     * =========================================================
+     * OPEN RACE
+     * =========================================================
+     */
+
+    async function openRace(index) {
+
+        const raceIndexEntry =
+            raceIndex[index];
+
+
+        if (!raceIndexEntry) {
+            return;
+        }
+
+
+        try {
+
+            currentRace =
+                await loadRace(raceIndexEntry);
+
+
+            renderRace(
+                currentRace,
+                raceIndexEntry,
+                index
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                'Failed to load race:',
+                error
+            );
+
+            showError(error.message);
+
+        }
+
+    }
+
+
+    function renderRace(
+        race,
+        raceIndexEntry,
+        index
+    ) {
+
+        showRaceView();
+
+
+        document.getElementById('race-title').textContent =
+            race.track_name;
+
+
+        document.getElementById('race-round').textContent =
+            `Round ${String(index + 1).padStart(2, '0')}`;
+
+
+        document.getElementById('breadcrumb').innerHTML =
+            `
+                F2 LEAGUE
+                <span class="mx-2 text-gray-700">/</span>
+                ${escapeHtml(race.track_name).toUpperCase()}
+            `;
+
+
+        renderSessionTabs(race);
+
+
+        const firstSession =
+            getFirstAvailableSession(race);
+
+
+        if (firstSession) {
+
+            selectSession(firstSession);
+
+        } else {
+
+            document.getElementById('race-winner').textContent =
+                '-';
+
+            document.getElementById('race-winner-points').textContent =
+                'No results available';
+
+            document.getElementById('session-title').textContent =
+                'No Classification';
+
+            document.getElementById('session-description').textContent =
+                'No session results available';
+
+            document.getElementById('race-table').innerHTML = '';
+
+        }
+
+    }
+
+
+    /*
+     * =========================================================
+     * SESSION TABS
+     * =========================================================
+     */
+
+    function renderSessionTabs(race) {
+
+        const container =
+            document.getElementById('session-tabs');
+
+
+        const sessions = [
+            {
+                key: 'qualifying',
+                label: 'Qualifying'
+            },
+            {
+                key: 'sprint',
+                label: 'Sprint'
+            },
+            {
+                key: 'race',
+                label: 'Race'
+            }
+        ];
+
+
+        const available =
+            sessions.filter(
+                session =>
+                    Array.isArray(race[session.key]) &&
+                    race[session.key].length > 0
+            );
+
+
+        container.innerHTML =
+            available
+                .map(session => {
+
+                    return `
+                        <button
+                            type="button"
+                            id="tab-${session.key}"
+                            onclick="selectSession('${session.key}')"
+                            class="
+                                session-tab
+                                px-5
+                                py-3
+                                text-[10px]
+                                uppercase
+                                tracking-widest
+                                font-bold
+                                text-gray-500
+                                whitespace-nowrap
+                            "
+                        >
+                            ${session.label}
+                        </button>
+                    `;
+
+                })
+                .join('');
+
+    }
+
+
+    function getFirstAvailableSession(race) {
+
+        if (race.race?.length) {
+            return 'race';
+        }
+
+        if (race.sprint?.length) {
+            return 'sprint';
+        }
+
+        if (race.qualifying?.length) {
+            return 'qualifying';
+        }
+
+        return null;
+
+    }
+
+
+    function selectSession(session) {
+
+        currentSession = session;
+
+
+        const results =
+            currentRace?.[session] ?? [];
+
+
+        document
+            .querySelectorAll('.session-tab')
+            .forEach(tab => {
+
+                const active =
+                    tab.id === `tab-${session}`;
+
+
+                tab.classList.toggle(
+                    'bg-red-600',
+                    active
+                );
+
+                tab.classList.toggle(
+                    'text-white',
+                    active
+                );
+
+                tab.classList.toggle(
+                    'text-gray-500',
+                    !active
+                );
+
+            });
+
+
+        renderSession(
+            results,
+            session
+        );
+
+    }
+
+
+    /*
+     * =========================================================
+     * SESSION RESULTS
+     * =========================================================
+     */
+
+    function renderSession(
+        results,
+        session
+    ) {
+
+        const sessionName =
+            session.charAt(0).toUpperCase() +
+            session.slice(1);
+
+
+        document.getElementById('session-title').textContent =
+            `${sessionName} Classification`;
+
+
+        document.getElementById('session-description').textContent =
+            `${results.length} driver${results.length === 1 ? '' : 's'} classified`;
+
+
+        const winner =
+            results.find(
+                driver => driver.position === 1
+            );
+
+
+        document.getElementById('race-winner').textContent =
+            winner?.driver_name ?? '-';
+
+
+        document.getElementById('race-winner-points').textContent =
+            winner
+                ? `${winner.points ?? 0} POINTS`
+                : 'No winner';
+
+
+        const table =
+            document.getElementById('race-table');
+
+
+        if (!results.length) {
+
+            table.innerHTML = `
+                <tr>
+                    <td
+                        colspan="9"
+                        class="px-5 py-10 text-center text-sm text-gray-600"
+                    >
+                        No results available for this session.
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+
+        table.innerHTML =
+            results
+                .map(driver => {
+
+                    const finished =
+                        String(driver.status ?? '')
+                            .toLowerCase() === 'finished';
+
+
+                    return `
+                        <tr class="driver-row border-b border-[#1d2025]">
+
+                            <td class="px-5 lg:px-7 py-5">
+
+                                <span class="
+                                    heading
+                                    text-2xl
+                                    font-black
+                                    ${
+                                        driver.position <= 3
+                                            ? 'text-white'
+                                            : 'text-gray-500'
+                                    }
+                                ">
+                                    ${String(driver.position).padStart(2, '0')}
+                                </span>
+
+                            </td>
+
+
+                            <td class="py-5 text-xs text-gray-600">
+                                ${driver.race_number ?? '-'}
+                            </td>
+
+
+                            <td class="py-5">
+
+                                <div class="font-bold text-sm">
+                                    ${escapeHtml(driver.driver_name)}
+                                </div>
+
+                            </td>
+
+
+                            <td class="py-5 text-xs text-gray-500">
+                                ${escapeHtml(driver.team_name ?? '-')}
+                            </td>
+
+
+                            <td class="py-5 text-center text-xs">
+                                ${driver.num_laps ?? '-'}
+                            </td>
+
+
+                            <td class="py-5 text-xs text-gray-400 font-mono">
+                                ${escapeHtml(driver.best_lap_time ?? '-')}
+                            </td>
+
+
+                            <td class="py-5 text-xs text-gray-400 font-mono">
+                                ${escapeHtml(driver.total_race_time ?? '-')}
+                            </td>
+
+
+                            <td class="py-5">
+
+                                <span class="
+                                    inline-flex
+                                    px-2
+                                    py-1
+                                    rounded
+                                    text-[9px]
+                                    font-bold
+                                    uppercase
+                                    tracking-wider
+                                    ${
+                                        finished
+                                            ? 'bg-emerald-500/10 text-emerald-400'
+                                            : 'bg-red-500/10 text-red-400'
+                                    }
+                                ">
+                                    ${escapeHtml(driver.status ?? '-')}
+                                </span>
+
+                            </td>
+
+
+                            <td class="px-5 lg:px-7 py-5 text-right">
+
+                                <span class="
+                                    heading
+                                    text-2xl
+                                    font-black
+                                    ${
+                                        driver.points > 0
+                                            ? 'text-white'
+                                            : 'text-gray-600'
+                                    }
+                                ">
+                                    ${driver.points ?? 0}
+                                </span>
+
+                            </td>
+
+                        </tr>
+                    `;
+
+                })
+                .join('');
+
+    }
+
+
+    /*
+     * =========================================================
+     * VIEWS
+     * =========================================================
+     */
+
+    function showOverview() {
+
+        document
+            .getElementById('overview-view')
+            .classList.remove('hidden');
+
+
+        document
+            .getElementById('race-view')
+            .classList.add('hidden');
+
+
+        document
+            .getElementById('error-view')
+            .classList.add('hidden');
+
+
+        document.getElementById('breadcrumb').innerHTML =
+            `
+                F2 LEAGUE
+                <span class="mx-2 text-gray-700">/</span>
+                CHAMPIONSHIP
+            `;
+
+
+        document
+            .getElementById('nav-overview')
+            .classList.add(
+                'bg-red-600',
+                'text-white'
+            );
+
+
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+
+    }
+
+
+    function showOverviewView() {
+
+        document
+            .getElementById('overview-view')
+            .classList.remove('hidden');
+
+
+        document
+            .getElementById('race-view')
+            .classList.add('hidden');
+
+
+        document
+            .getElementById('error-view')
+            .classList.add('hidden');
+
+    }
+
+
+    function showRaceView() {
+
+        document
+            .getElementById('overview-view')
+            .classList.add('hidden');
+
+
+        document
+            .getElementById('race-view')
+            .classList.remove('hidden');
+
+
+        document
+            .getElementById('error-view')
+            .classList.add('hidden');
+
+
+        document
+            .getElementById('nav-overview')
+            .classList.remove(
+                'bg-red-600',
+                'text-white'
+            );
+
+
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+
+    }
+
+
+    /*
+     * =========================================================
+     * MOBILE MENU
+     * =========================================================
+     */
+
+    function toggleMobileMenu() {
+
+        document
+            .getElementById('mobile-menu')
+            .classList.toggle('hidden');
+
+    }
+
+
+    function closeMobileMenu() {
+
+        document
+            .getElementById('mobile-menu')
+            .classList.add('hidden');
+
+    }
+
+
+    /*
+     * =========================================================
+     * ERROR
+     * =========================================================
+     */
+
+    function showError(message) {
+
+        document
+            .getElementById('overview-view')
+            .classList.add('hidden');
+
+
+        document
+            .getElementById('race-view')
+            .classList.add('hidden');
+
+
+        document
+            .getElementById('error-view')
+            .classList.remove('hidden');
+
+
+        document
+            .getElementById('error-message')
+            .textContent = message;
+
+    }
+
+
+    /*
+     * =========================================================
+     * HTML SAFETY
+     * =========================================================
+     */
+
+    function escapeHtml(value) {
+
+        const div =
+            document.createElement('div');
+
+        div.textContent =
+            String(value ?? '');
+
+        return div.innerHTML;
+
+    }
+
+</script>
+
 </body>
 </html>
