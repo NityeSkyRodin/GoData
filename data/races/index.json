@@ -2,5 +2,9 @@
   {
     "track_name": "Melbourne",
     "file": "melbourne.json"
+  },
+  {
+    "track_name": "Shanghai",
+    "file": "shanghai.json"
   }
 ]
