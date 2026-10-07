@@ -147,25 +147,25 @@ func mapParticipants(participants map[int]Participant) map[int]Participant {
 func mapTeam(teamID uint8) string {
 	switch teamID {
 	case 209:
-		return "Rodin Motorsport"
+		return "ART Grand Prix"
 	case 210:
-		return "Van Amersfoort Racing"
+		return "Campos Racing"
 	case 211:
-		return "DAMS Lucas Oil"
+		return "Rodin Motorsport"
 	case 212:
 		return "AIX Racing"
 	case 213:
-		return "Hitech Pulse-Eight"
+		return "DAMS Lucas Oil"
 	case 214:
-		return "ART Grand Prix"
+		return "Hitech Pulse-Eight"
 	case 215:
 		return "MP Motorsport"
 	case 216:
-		return "Campos Racing"
+		return "PREMA Racing"
 	case 217:
 		return "Trident"
 	case 218:
-		return "PREMA Racing"
+		return "Van Amersfoort Racing"
 	case 219:
 		return "Invicta Racing"
 	default:
