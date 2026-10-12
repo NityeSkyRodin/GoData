@@ -10,5 +10,9 @@
   {
     "track_name": "Suzuka",
     "file": "suzuka.json"
+  },
+  {
+    "track_name": "Sakhir",
+    "file": "sakhir.json"
   }
 ]
