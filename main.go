@@ -65,9 +65,6 @@ func main() {
 				currentTrackID = trackID
 				currentSessionType = parseSessionType(sessionTypeID)
 			}
-
-		case 2:
-
 		case 4:
 			if header.SessionUID != participantSessionUID {
 				participantSessionUID = header.SessionUID
@@ -83,7 +80,6 @@ func main() {
 					fmt.Printf("\n[LOBBY] Driverlist data received: %d Drivers\n", knownDrivers)
 				}
 			}
-
 		case 8:
 			if header.SessionUID == lastResultUID {
 				continue

@@ -6,5 +6,9 @@
   {
     "track_name": "Shanghai",
     "file": "shanghai.json"
+  },
+  {
+    "track_name": "Suzuka",
+    "file": "suzuka.json"
   }
 ]

@@ -1,15 +1,21 @@
 [
   {
+    "driver_number": 24,
+    "driver_name": "Sebastiaan",
+    "team_name": "Van Amersfoort Racing",
+    "points": 69
+  },
+  {
     "driver_number": 9,
     "driver_name": "Player",
     "team_name": "PREMA Racing",
     "points": 55
   },
   {
-    "driver_number": 24,
-    "driver_name": "Sebastiaan",
-    "team_name": "Van Amersfoort Racing",
-    "points": 41
+    "driver_number": 1,
+    "driver_name": "FORNAROLI",
+    "team_name": "Invicta Racing",
+    "points": 45
   },
   {
     "driver_number": 25,
@@ -18,15 +24,33 @@
     "points": 30
   },
   {
-    "driver_number": 1,
-    "driver_name": "FORNAROLI",
-    "team_name": "Invicta Racing",
-    "points": 29
+    "driver_number": 20,
+    "driver_name": "DÜRKSEN",
+    "team_name": "AIX Racing",
+    "points": 28
+  },
+  {
+    "driver_number": 7,
+    "driver_name": "BROWNING",
+    "team_name": "Hitech Pulse-Eight",
+    "points": 28
+  },
+  {
+    "driver_number": 4,
+    "driver_name": "LINDBLAD",
+    "team_name": "Campos Racing",
+    "points": 25
   },
   {
     "driver_number": 22,
     "driver_name": "MEGUETOUNIF",
     "team_name": "Trident",
+    "points": 23
+  },
+  {
+    "driver_number": 9,
+    "driver_name": "Borninkhof",
+    "team_name": "PREMA Racing",
     "points": 23
   },
   {
@@ -36,22 +60,22 @@
     "points": 18
   },
   {
-    "driver_number": 7,
-    "driver_name": "BROWNING",
-    "team_name": "Hitech Pulse-Eight",
-    "points": 17
-  },
-  {
-    "driver_number": 20,
-    "driver_name": "DÜRKSEN",
-    "team_name": "AIX Racing",
+    "driver_number": 3,
+    "driver_name": "MARTÍ",
+    "team_name": "Campos Racing",
     "points": 16
   },
   {
-    "driver_number": 4,
-    "driver_name": "LINDBLAD",
-    "team_name": "Campos Racing",
-    "points": 15
+    "driver_number": 6,
+    "driver_name": "VERSCHOOR",
+    "team_name": "MP Motorsport",
+    "points": 14
+  },
+  {
+    "driver_number": 11,
+    "driver_name": "CRAWFORD",
+    "team_name": "DAMS Lucas Oil",
+    "points": 14
   },
   {
     "driver_number": 17,
@@ -60,10 +84,16 @@
     "points": 13
   },
   {
-    "driver_number": 6,
-    "driver_name": "VERSCHOOR",
-    "team_name": "MP Motorsport",
+    "driver_number": 14,
+    "driver_name": "MARTINS",
+    "team_name": "ART Grand Prix",
     "points": 10
+  },
+  {
+    "driver_number": 16,
+    "driver_name": "CORDEEL",
+    "team_name": "Rodin Motorsport",
+    "points": 8
   },
   {
     "driver_number": 12,
@@ -72,22 +102,10 @@
     "points": 6
   },
   {
-    "driver_number": 16,
-    "driver_name": "CORDEEL",
-    "team_name": "Rodin Motorsport",
-    "points": 6
-  },
-  {
     "driver_number": 23,
     "driver_name": "ESTERSON",
     "team_name": "Trident",
     "points": 5
-  },
-  {
-    "driver_number": 14,
-    "driver_name": "MARTINS",
-    "team_name": "ART Grand Prix",
-    "points": 2
   },
   {
     "driver_number": 15,
@@ -117,18 +135,6 @@
     "driver_number": 10,
     "driver_name": "MINÌ",
     "team_name": "PREMA Racing",
-    "points": 0
-  },
-  {
-    "driver_number": 3,
-    "driver_name": "MARTÍ",
-    "team_name": "Campos Racing",
-    "points": 0
-  },
-  {
-    "driver_number": 11,
-    "driver_name": "CRAWFORD",
-    "team_name": "DAMS Lucas Oil",
     "points": 0
   }
 ]
