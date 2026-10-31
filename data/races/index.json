@@ -18,5 +18,9 @@
   {
     "track_name": "Jeddah",
     "file": "jeddah.json"
+  },
+  {
+    "track_name": "Miami",
+    "file": "miami.json"
   }
 ]
