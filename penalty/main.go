@@ -8,9 +8,6 @@ import (
     "github.com/charmbracelet/huh"
 )
 
-// Penalty is één strafsoort. Label is wat je in het menu ziet,
-// Seconds is wat er straks bij de racetijd opgeteld wordt.
-// Vul deze lijst aan zoals je zelf wil.
 type Penalty struct {
     Label   string
     Seconds int
@@ -25,9 +22,9 @@ var penalties = []Penalty{
     {"Disqualified", 0},
 }
 
-// Zoals ze in de database staan — zie parseSessionType in main/main.go.
 var sessionTypes = []string{"Qualifying", "Sprint", "Race"}
 
+//TODO: when DSQ or DNF add 5 sec to next race.
 func main() {
     db, err := database.InitDB("f2_results.db")
     if err != nil {

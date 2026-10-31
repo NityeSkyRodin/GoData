@@ -3,19 +3,25 @@
     "driver_number": 9,
     "driver_name": "Borninkhof",
     "team_name": "PREMA Racing",
-    "points": 147
+    "points": 172
   },
   {
     "driver_number": 24,
     "driver_name": "Sebastiaan",
     "team_name": "Van Amersfoort Racing",
-    "points": 121
+    "points": 140
   },
   {
     "driver_number": 1,
     "driver_name": "FORNAROLI",
     "team_name": "Invicta Racing",
-    "points": 63
+    "points": 78
+  },
+  {
+    "driver_number": 4,
+    "driver_name": "LINDBLAD",
+    "team_name": "Campos Racing",
+    "points": 61
   },
   {
     "driver_number": 7,
@@ -24,10 +30,16 @@
     "points": 58
   },
   {
-    "driver_number": 4,
-    "driver_name": "LINDBLAD",
+    "driver_number": 3,
+    "driver_name": "MARTÍ",
     "team_name": "Campos Racing",
-    "points": 49
+    "points": 52
+  },
+  {
+    "driver_number": 22,
+    "driver_name": "MEGUETOUNIF",
+    "team_name": "Trident",
+    "points": 48
   },
   {
     "driver_number": 25,
@@ -36,27 +48,27 @@
     "points": 42
   },
   {
-    "driver_number": 22,
-    "driver_name": "MEGUETOUNIF",
-    "team_name": "Trident",
-    "points": 42
-  },
-  {
-    "driver_number": 3,
-    "driver_name": "MARTÍ",
-    "team_name": "Campos Racing",
-    "points": 42
-  },
-  {
     "driver_number": 11,
     "driver_name": "CRAWFORD",
     "team_name": "DAMS Lucas Oil",
-    "points": 33
+    "points": 35
+  },
+  {
+    "driver_number": 17,
+    "driver_name": "DUNNE",
+    "team_name": "Rodin Motorsport",
+    "points": 32
   },
   {
     "driver_number": 6,
     "driver_name": "VERSCHOOR",
     "team_name": "MP Motorsport",
+    "points": 30
+  },
+  {
+    "driver_number": 14,
+    "driver_name": "MARTINS",
+    "team_name": "ART Grand Prix",
     "points": 29
   },
   {
@@ -64,18 +76,6 @@
     "driver_name": "DÜRKSEN",
     "team_name": "AIX Racing",
     "points": 28
-  },
-  {
-    "driver_number": 14,
-    "driver_name": "MARTINS",
-    "team_name": "ART Grand Prix",
-    "points": 25
-  },
-  {
-    "driver_number": 17,
-    "driver_name": "DUNNE",
-    "team_name": "Rodin Motorsport",
-    "points": 24
   },
   {
     "driver_number": 8,
