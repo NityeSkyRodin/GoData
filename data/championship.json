@@ -3,19 +3,19 @@
     "driver_number": 9,
     "driver_name": "Borninkhof",
     "team_name": "PREMA Racing",
-    "points": 109
+    "points": 115
   },
   {
     "driver_number": 24,
     "driver_name": "Sebastiaan",
     "team_name": "Van Amersfoort Racing",
-    "points": 103
+    "points": 113
   },
   {
     "driver_number": 1,
     "driver_name": "FORNAROLI",
     "team_name": "Invicta Racing",
-    "points": 60
+    "points": 63
   },
   {
     "driver_number": 7,
@@ -24,16 +24,16 @@
     "points": 43
   },
   {
+    "driver_number": 25,
+    "driver_name": "VILLAGÓMEZ",
+    "team_name": "Van Amersfoort Racing",
+    "points": 40
+  },
+  {
     "driver_number": 22,
     "driver_name": "MEGUETOUNIF",
     "team_name": "Trident",
     "points": 37
-  },
-  {
-    "driver_number": 25,
-    "driver_name": "VILLAGÓMEZ",
-    "team_name": "Van Amersfoort Racing",
-    "points": 35
   },
   {
     "driver_number": 4,
@@ -57,7 +57,13 @@
     "driver_number": 3,
     "driver_name": "MARTÍ",
     "team_name": "Campos Racing",
-    "points": 25
+    "points": 27
+  },
+  {
+    "driver_number": 17,
+    "driver_name": "DUNNE",
+    "team_name": "Rodin Motorsport",
+    "points": 18
   },
   {
     "driver_number": 8,
@@ -69,19 +75,19 @@
     "driver_number": 14,
     "driver_name": "MARTINS",
     "team_name": "ART Grand Prix",
-    "points": 14
-  },
-  {
-    "driver_number": 17,
-    "driver_name": "DUNNE",
-    "team_name": "Rodin Motorsport",
-    "points": 14
+    "points": 15
   },
   {
     "driver_number": 11,
     "driver_name": "CRAWFORD",
     "team_name": "DAMS Lucas Oil",
     "points": 14
+  },
+  {
+    "driver_number": 5,
+    "driver_name": "NityeSky",
+    "team_name": "MP Motorsport",
+    "points": 9
   },
   {
     "driver_number": 16,
@@ -117,12 +123,6 @@
     "driver_number": 21,
     "driver_name": "SHIELDS",
     "team_name": "AIX Racing",
-    "points": 0
-  },
-  {
-    "driver_number": 5,
-    "driver_name": "NityeSky",
-    "team_name": "MP Motorsport",
     "points": 0
   },
   {
