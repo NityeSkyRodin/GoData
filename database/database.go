@@ -63,6 +63,23 @@ type RaceIndex struct {
     File      string `json:"file"`
 }
 
+// Race is één opgeslagen sessie uit de races-tabel.
+type Race struct {
+	SessionUID  string
+	TrackName   string
+	TrackID     int
+	SessionType string
+	CreatedAt   string
+}
+
+// Driver is een coureur zoals die in de resultaten voorkomt. Er is geen
+// aparte coureurs-tabel; deze wordt afgeleid uit race_results.
+type Driver struct {
+	RaceNumber int
+	DriverName string
+	TeamName   string
+}
+
 func InitDB(dbPath string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -287,4 +304,106 @@ func GetRaceIndex(db *sql.DB) ([]RaceIndex, error) {
     }
 
     return races, rows.Err()
+}
+// GetRaces geeft alle opgeslagen sessies terug, oudste eerst.
+func GetRaces(db *sql.DB) ([]Race, error) {
+	rows, err := db.Query(`
+		SELECT session_uid, track_name, track_id, session_type, created_at
+		FROM races
+		ORDER BY created_at`)
+	if err != nil {
+		return nil, fmt.Errorf("error when querying races: %w", err)
+	}
+	defer rows.Close()
+
+	var races []Race
+	for rows.Next() {
+		var race Race
+		if err := rows.Scan(&race.SessionUID, &race.TrackName, &race.TrackID,
+			&race.SessionType, &race.CreatedAt); err != nil {
+			return nil, fmt.Errorf("error when scanning race: %w", err)
+		}
+		races = append(races, race)
+	}
+
+	return races, rows.Err()
+}
+
+// GetDrivers geeft per startnummer één coureur terug, met de naam en het team
+// uit de meest recente sessie. Namen kunnen per sessie wisselen, dus groeperen
+// op race_number voorkomt dat dezelfde auto twee keer in de lijst komt.
+func GetDrivers(db *sql.DB) ([]Driver, error) {
+	rows, err := db.Query(`
+		SELECT rr.race_number, rr.driver_name, rr.team_name, MAX(r.created_at)
+		FROM race_results rr
+		JOIN races r ON r.session_uid = rr.session_uid
+		GROUP BY rr.race_number
+		ORDER BY rr.race_number`)
+	if err != nil {
+		return nil, fmt.Errorf("error when querying drivers: %w", err)
+	}
+	defer rows.Close()
+
+	var drivers []Driver
+	for rows.Next() {
+		var driver Driver
+		var laatsteSessie string // alleen om MAX() ergens in te scannen
+		if err := rows.Scan(&driver.RaceNumber, &driver.DriverName,
+			&driver.TeamName, &laatsteSessie); err != nil {
+			return nil, fmt.Errorf("error when scanning driver: %w", err)
+		}
+		drivers = append(drivers, driver)
+	}
+
+	return drivers, rows.Err()
+}
+
+// GetTrackNames geeft alleen de circuitnamen terug, in de volgorde waarin ze
+// voor het eerst gereden zijn. Voor keuzelijstjes waar je de rest niet nodig hebt.
+func GetTrackNames(db *sql.DB) ([]string, error) {
+	rows, err := db.Query(`
+		SELECT track_name
+		FROM races
+		GROUP BY track_name
+		ORDER BY MIN(created_at)`)
+	if err != nil {
+		return nil, fmt.Errorf("error when querying track names: %w", err)
+	}
+	defer rows.Close()
+
+	var names []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, fmt.Errorf("error when scanning track name: %w", err)
+		}
+		names = append(names, name)
+	}
+
+	return names, rows.Err()
+}
+
+// GetDriverNames geeft alleen de coureursnamen terug, één per startnummer.
+func GetDriverNames(db *sql.DB) ([]string, error) {
+	rows, err := db.Query(`
+		SELECT rr.driver_name, MAX(r.created_at)
+		FROM race_results rr
+		JOIN races r ON r.session_uid = rr.session_uid
+		GROUP BY rr.race_number
+		ORDER BY rr.race_number`)
+	if err != nil {
+		return nil, fmt.Errorf("error when querying driver names: %w", err)
+	}
+	defer rows.Close()
+
+	var names []string
+	for rows.Next() {
+		var name, laatsteSessie string
+		if err := rows.Scan(&name, &laatsteSessie); err != nil {
+			return nil, fmt.Errorf("error when scanning driver name: %w", err)
+		}
+		names = append(names, name)
+	}
+
+	return names, rows.Err()
 }

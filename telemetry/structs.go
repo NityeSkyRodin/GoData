@@ -1,8 +1,9 @@
-package main
+package telemetry
 
 import "time"
 
-const headerSize = 29
+// HeaderSize is de vaste grootte van de pakket-header in bytes.
+const HeaderSize = 29
 const maxCars = 22
 
 type PacketHeader struct {

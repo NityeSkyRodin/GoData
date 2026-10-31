@@ -1,18 +1,26 @@
-package main
+package telemetry
 
 import (
 	"bytes"
 	"database/sql"
 	"encoding/binary"
 	"fmt"
+	"strings"
 	"time"
 
 	"GoData/database"
 	"GoData/tracks"
-
 )
 
-func parseParticipants(payload []byte) map[int]Participant {
+// cString leest een naam uit een vast byte-veld: alles tot de eerste nul-byte.
+func cString(b []byte) string {
+	if i := bytes.IndexByte(b, 0); i >= 0 {
+		b = b[:i]
+	}
+	return strings.TrimSpace(string(b))
+}
+
+func ParseParticipants(payload []byte) map[int]Participant {
 	out := map[int]Participant{}
 	if len(payload) < 1 {
 		return out
@@ -40,7 +48,7 @@ func parseParticipants(payload []byte) map[int]Participant {
 	return out
 }
 
-func parseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, participants map[int]Participant, currentTrackID int8, currentSessionType string) (FinalRaceResult, error) {
+func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, participants map[int]Participant, currentTrackID int8, currentSessionType string) (FinalRaceResult, error) {
 
 	if currentTrackID == -1 {
 		return FinalRaceResult{}, fmt.Errorf("currentTrackID is not set, cannot determine track name")
@@ -104,8 +112,8 @@ func parseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, p
 			RaceNumber:       participants[i].RaceNumber,
 			Name:             participants[i].Name,
 			NumLaps:          int(head.NumLaps),
-			TotalRaceTime:    formatRaceTime(tail.TotalRaceTime),
-			BestLapTime:      formatLapTime(tail.BestLapTimeInMS),
+			TotalRaceTime:    FormatRaceTime(tail.TotalRaceTime),
+			BestLapTime:      FormatLapTime(tail.BestLapTimeInMS),
 			Points:           int(head.Points),
 			ResultStatusText: resultStatusName(head.ResultStatus),
 			TeamName:         mapTeam(participants[i].TeamID),

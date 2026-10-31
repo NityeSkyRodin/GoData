@@ -8,6 +8,8 @@ import (
 
 	"GoData/database"
 	"GoData/exporter"
+	"GoData/git"
+	"GoData/telemetry"
 )
 
 func main() {
@@ -34,7 +36,7 @@ func main() {
 	fmt.Println("Go is listening on port 20777 for F2 data...")
 
 	buf := make([]byte, 2048)
-	participants := map[int]Participant{}
+	participants := map[int]telemetry.Participant{}
 	knownDrivers := 0
 	var participantSessionUID uint64
 	var lastResultUID uint64
@@ -44,16 +46,16 @@ func main() {
 
 	for {
 		n, _, err := conn.ReadFromUDP(buf)
-		if err != nil || n < headerSize {
+		if err != nil || n < telemetry.HeaderSize {
 			continue
 		}
 
-		var header PacketHeader
-		if err := binary.Read(bytes.NewReader(buf[:headerSize]), binary.LittleEndian, &header); err != nil {
+		var header telemetry.PacketHeader
+		if err := binary.Read(bytes.NewReader(buf[:telemetry.HeaderSize]), binary.LittleEndian, &header); err != nil {
 			continue
 		}
 
-		payload := buf[headerSize:n]
+		payload := buf[telemetry.HeaderSize:n]
 
 		switch header.PacketID {
 
@@ -68,7 +70,7 @@ func main() {
 		case 4:
 			if header.SessionUID != participantSessionUID {
 				participantSessionUID = header.SessionUID
-				p := parseParticipants(payload)
+				p := telemetry.ParseParticipants(payload)
 				if len(p) == 0 {
 					continue
 				}
@@ -85,7 +87,7 @@ func main() {
 				continue
 			}
 
-			result, err := parseFinalClassification(db, header, payload, participants, currentTrackID, currentSessionType)
+			result, err := telemetry.ParseFinalClassification(db, header, payload, participants, currentTrackID, currentSessionType)
 			if err != nil {
 				fmt.Println("\nError parsing final classification:", err)
 				continue
@@ -101,6 +103,8 @@ func main() {
 			if err := exporter.ParseRaceWeekendResults(db, result.TrackName); err != nil {
 				fmt.Println("Error retrieving race weekend results:", err)
 			}
+
+			git.CommitRaceResult(result.TrackName, result.SessionType)
 		}
 	}
 }
@@ -118,14 +122,7 @@ func parseSessionType(sessionType uint8) string {
 	}
 }
 
-func parseFormula(formula uint8) string {
-	if formula == 2 {
-		return "F2"
-	}
-	return "F1"
-}
-
-func mapParticipants(participants map[int]Participant) map[int]Participant {
+func mapParticipants(participants map[int]telemetry.Participant) map[int]telemetry.Participant {
 	for index, participant := range participants {
 		fmt.Printf(
 			"Mapping participant: %s | TeamID: %v | Type: %T\n",
@@ -138,33 +135,4 @@ func mapParticipants(participants map[int]Participant) map[int]Participant {
 	}
 
 	return participants
-}
-
-func mapTeam(teamID uint8) string {
-	switch teamID {
-	case 209:
-		return "ART Grand Prix"
-	case 210:
-		return "Campos Racing"
-	case 211:
-		return "Rodin Motorsport"
-	case 212:
-		return "AIX Racing"
-	case 213:
-		return "DAMS Lucas Oil"
-	case 214:
-		return "Hitech Pulse-Eight"
-	case 215:
-		return "MP Motorsport"
-	case 216:
-		return "PREMA Racing"
-	case 217:
-		return "Trident"
-	case 218:
-		return "Van Amersfoort Racing"
-	case 219:
-		return "Invicta Racing"
-	default:
-		return "Unknown"
-	}
 }
