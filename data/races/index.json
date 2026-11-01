@@ -22,5 +22,9 @@
   {
     "track_name": "Miami",
     "file": "miami.json"
+  },
+  {
+    "track_name": "Imola",
+    "file": "imola.json"
   }
 ]
