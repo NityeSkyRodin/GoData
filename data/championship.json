@@ -3,7 +3,7 @@
     "driver_number": 9,
     "driver_name": "Borninkhof",
     "team_name": "PREMA Racing",
-    "points": 213
+    "points": 223
   },
   {
     "driver_number": 24,
@@ -15,30 +15,30 @@
     "driver_number": 1,
     "driver_name": "FORNAROLI",
     "team_name": "Invicta Racing",
-    "points": 104
+    "points": 105
   },
   {
     "driver_number": 7,
     "driver_name": "BROWNING",
     "team_name": "Hitech Pulse-Eight",
-    "points": 94
+    "points": 99
   },
   {
     "driver_number": 4,
     "driver_name": "LINDBLAD",
     "team_name": "Campos Racing",
-    "points": 74
-  },
-  {
-    "driver_number": 17,
-    "driver_name": "DUNNE",
-    "team_name": "Rodin Motorsport",
-    "points": 59
+    "points": 77
   },
   {
     "driver_number": 11,
     "driver_name": "CRAWFORD",
     "team_name": "DAMS Lucas Oil",
+    "points": 65
+  },
+  {
+    "driver_number": 17,
+    "driver_name": "DUNNE",
+    "team_name": "Rodin Motorsport",
     "points": 59
   },
   {
@@ -69,7 +69,7 @@
     "driver_number": 25,
     "driver_name": "VILLAGÓMEZ",
     "team_name": "Van Amersfoort Racing",
-    "points": 42
+    "points": 46
   },
   {
     "driver_number": 6,
@@ -81,7 +81,7 @@
     "driver_number": 5,
     "driver_name": "NityeSky",
     "team_name": "MP Motorsport",
-    "points": 24
+    "points": 32
   },
   {
     "driver_number": 8,
@@ -105,7 +105,7 @@
     "driver_number": 15,
     "driver_name": "MIYATA",
     "team_name": "ART Grand Prix",
-    "points": 7
+    "points": 9
   },
   {
     "driver_number": 21,
