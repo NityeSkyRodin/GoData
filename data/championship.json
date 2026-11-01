@@ -3,19 +3,25 @@
     "driver_number": 9,
     "driver_name": "Borninkhof",
     "team_name": "PREMA Racing",
-    "points": 172
+    "points": 177
   },
   {
     "driver_number": 24,
     "driver_name": "Sebastiaan",
     "team_name": "Van Amersfoort Racing",
-    "points": 140
+    "points": 145
   },
   {
     "driver_number": 1,
     "driver_name": "FORNAROLI",
     "team_name": "Invicta Racing",
-    "points": 78
+    "points": 88
+  },
+  {
+    "driver_number": 7,
+    "driver_name": "BROWNING",
+    "team_name": "Hitech Pulse-Eight",
+    "points": 66
   },
   {
     "driver_number": 4,
@@ -24,22 +30,16 @@
     "points": 61
   },
   {
-    "driver_number": 7,
-    "driver_name": "BROWNING",
-    "team_name": "Hitech Pulse-Eight",
-    "points": 58
-  },
-  {
     "driver_number": 3,
     "driver_name": "MARTÍ",
     "team_name": "Campos Racing",
-    "points": 52
+    "points": 53
   },
   {
     "driver_number": 22,
     "driver_name": "MEGUETOUNIF",
     "team_name": "Trident",
-    "points": 48
+    "points": 51
   },
   {
     "driver_number": 25,
@@ -51,7 +51,7 @@
     "driver_number": 11,
     "driver_name": "CRAWFORD",
     "team_name": "DAMS Lucas Oil",
-    "points": 35
+    "points": 37
   },
   {
     "driver_number": 17,
@@ -84,6 +84,12 @@
     "points": 18
   },
   {
+    "driver_number": 12,
+    "driver_name": "MAINI",
+    "team_name": "DAMS Lucas Oil",
+    "points": 12
+  },
+  {
     "driver_number": 16,
     "driver_name": "CORDEEL",
     "team_name": "Rodin Motorsport",
@@ -100,12 +106,6 @@
     "driver_name": "MIYATA",
     "team_name": "ART Grand Prix",
     "points": 7
-  },
-  {
-    "driver_number": 12,
-    "driver_name": "MAINI",
-    "team_name": "DAMS Lucas Oil",
-    "points": 6
   },
   {
     "driver_number": 23,
