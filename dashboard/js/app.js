@@ -224,9 +224,7 @@ function renderSession(results, session) {
     title.textContent = `${session === 'race' ? 'Feature Race' : session.charAt(0).toUpperCase() + session.slice(1)}`;
     document.getElementById('session-description').textContent = `${results.length} drivers classified`;
 
-    const winner = results.find(driver => driver.position === 1);
-    document.getElementById('race-winner').textContent = winner?.driver_name ?? '--';
-    document.getElementById('race-winner-card').classList.toggle('hidden', !winner);
+    renderRaceStats(results);
 
     const tbody = document.getElementById('race-table-body');
     tbody.innerHTML = results.map(driver => {
@@ -265,6 +263,50 @@ function renderSession(results, session) {
             </tr>
         `;
     }).join('');
+}
+
+function parseLapTime(time) {
+    // "1:37.562" -> 97.562 seconds, null when there is no valid time
+    const match = /^(?:(\d+):)?(\d+(?:\.\d+)?)$/.exec(String(time ?? '').trim());
+    if (!match) return null;
+    const seconds = (parseInt(match[1] ?? '0') * 60) + parseFloat(match[2]);
+    return seconds > 0 ? seconds : null;
+}
+
+function renderRaceStats(results) {
+    const winner = results.find(driver => driver.position === 1);
+    const pole = currentRace?.qualifying?.find(driver => driver.position === 1);
+
+    const fastest = results
+        .filter(driver => parseLapTime(driver.best_lap_time) !== null)
+        .sort((a, b) => parseLapTime(a.best_lap_time) - parseLapTime(b.best_lap_time))[0];
+
+    const finishers = results.filter(driver => String(driver.status).toLowerCase() === 'finished').length;
+    const dnfs = results.length - finishers;
+
+    const container = document.getElementById('race-stats-cards');
+    container.innerHTML = `
+        <div class="bg-[#151821] p-5 slanted border border-[#232734]">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Session Winner</div>
+            <div class="text-xl font-black text-white mt-1 font-header italic tracking-wide truncate">${winner?.driver_name ?? '--'}</div>
+            <div class="text-sm text-[#0090D0] font-bold mt-1 truncate">${winner?.team_name ?? '-'}</div>
+        </div>
+        <div class="bg-[#151821] p-5 slanted border border-[#232734]">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Fastest Lap</div>
+            <div class="text-xl font-black text-white mt-1 font-header italic tracking-wide truncate">${fastest?.driver_name ?? '--'}</div>
+            <div class="text-sm text-[#0090D0] font-bold mt-1">${fastest?.best_lap_time ?? '-'}</div>
+        </div>
+        <div class="bg-[#151821] p-5 slanted border border-[#232734]">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pole Position</div>
+            <div class="text-xl font-black text-white mt-1 font-header italic tracking-wide truncate">${pole?.driver_name ?? '--'}</div>
+            <div class="text-sm text-[#0090D0] font-bold mt-1">${pole?.best_lap_time ?? '-'}</div>
+        </div>
+        <div class="bg-[#151821] p-5 slanted border border-[#232734]">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Finished</div>
+            <div class="text-2xl font-black text-white mt-1 font-header italic">${finishers}/${results.length}</div>
+            <div class="text-xs ${dnfs > 0 ? 'text-red-400' : 'text-slate-400'} font-bold mt-1 uppercase">${dnfs} DNF</div>
+        </div>
+    `;
 }
 
 function updateActiveNav(activeId) {

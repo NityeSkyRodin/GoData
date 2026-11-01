@@ -44,7 +44,7 @@
         </nav>
     </aside>
 
-    <main class="flex-1 p-5 lg:p-10 max-w-[1400px]">
+    <main class="flex-1 min-w-0 w-full p-5 lg:p-10 max-w-[1400px] mx-auto">
 
         <div id="view-overview">
             <div class="mb-10">
@@ -93,19 +93,14 @@
 
             <div id="session-tabs" class="flex gap-2 mb-6 overflow-x-auto pb-2"></div>
 
+            <div id="race-stats-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-10"></div>
+
             <div class="bg-[#151821] border border-[#232734] slanted p-5 lg:p-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 opacity-5 pointer-events-none font-header font-black italic text-[200px] leading-none transform translate-x-10 -translate-y-10">F2</div>
-                
-                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4 border-b border-[#232734] pb-6">
-                    <div>
-                        <h2 id="session-title" class="font-header text-3xl font-black uppercase italic tracking-wide text-[#0090D0]"></h2>
-                        <div id="session-description" class="text-xs uppercase tracking-widest text-slate-500 font-bold mt-1"></div>
-                    </div>
-                    
-                    <div id="race-winner-card" class="text-right">
-                        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Session Winner</div>
-                        <div id="race-winner" class="font-header text-3xl font-black uppercase italic text-white"></div>
-                    </div>
+
+                <div class="relative z-10 mb-8 border-b border-[#232734] pb-6">
+                    <h2 id="session-title" class="font-header text-3xl font-black uppercase italic tracking-wide text-[#0090D0]"></h2>
+                    <div id="session-description" class="text-xs uppercase tracking-widest text-slate-500 font-bold mt-1"></div>
                 </div>
 
                 <div class="overflow-x-auto relative z-10">
