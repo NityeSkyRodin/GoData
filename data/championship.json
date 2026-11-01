@@ -9,30 +9,36 @@
     "driver_number": 24,
     "driver_name": "Sebastiaan",
     "team_name": "Van Amersfoort Racing",
-    "points": 155
+    "points": 157
   },
   {
     "driver_number": 1,
     "driver_name": "FORNAROLI",
     "team_name": "Invicta Racing",
-    "points": 89
+    "points": 104
   },
   {
     "driver_number": 7,
     "driver_name": "BROWNING",
     "team_name": "Hitech Pulse-Eight",
-    "points": 76
+    "points": 94
   },
   {
     "driver_number": 4,
     "driver_name": "LINDBLAD",
     "team_name": "Campos Racing",
-    "points": 64
+    "points": 74
   },
   {
     "driver_number": 17,
     "driver_name": "DUNNE",
     "team_name": "Rodin Motorsport",
+    "points": 59
+  },
+  {
+    "driver_number": 11,
+    "driver_name": "CRAWFORD",
+    "team_name": "DAMS Lucas Oil",
     "points": 59
   },
   {
@@ -42,22 +48,22 @@
     "points": 55
   },
   {
+    "driver_number": 14,
+    "driver_name": "MARTINS",
+    "team_name": "ART Grand Prix",
+    "points": 54
+  },
+  {
     "driver_number": 3,
     "driver_name": "MARTÍ",
     "team_name": "Campos Racing",
     "points": 53
   },
   {
-    "driver_number": 11,
-    "driver_name": "CRAWFORD",
-    "team_name": "DAMS Lucas Oil",
-    "points": 47
-  },
-  {
-    "driver_number": 14,
-    "driver_name": "MARTINS",
-    "team_name": "ART Grand Prix",
-    "points": 46
+    "driver_number": 20,
+    "driver_name": "DÜRKSEN",
+    "team_name": "AIX Racing",
+    "points": 53
   },
   {
     "driver_number": 25,
@@ -70,12 +76,6 @@
     "driver_name": "VERSCHOOR",
     "team_name": "MP Motorsport",
     "points": 38
-  },
-  {
-    "driver_number": 20,
-    "driver_name": "DÜRKSEN",
-    "team_name": "AIX Racing",
-    "points": 28
   },
   {
     "driver_number": 5,
@@ -93,7 +93,7 @@
     "driver_number": 12,
     "driver_name": "MAINI",
     "team_name": "DAMS Lucas Oil",
-    "points": 14
+    "points": 18
   },
   {
     "driver_number": 16,
@@ -108,6 +108,12 @@
     "points": 7
   },
   {
+    "driver_number": 21,
+    "driver_name": "SHIELDS",
+    "team_name": "AIX Racing",
+    "points": 6
+  },
+  {
     "driver_number": 23,
     "driver_name": "ESTERSON",
     "team_name": "Trident",
@@ -117,18 +123,12 @@
     "driver_number": 10,
     "driver_name": "MINÌ",
     "team_name": "PREMA Racing",
-    "points": 1
+    "points": 3
   },
   {
     "driver_number": 2,
     "driver_name": "STANĚK",
     "team_name": "Invicta Racing",
-    "points": 0
-  },
-  {
-    "driver_number": 21,
-    "driver_name": "SHIELDS",
-    "team_name": "AIX Racing",
     "points": 0
   }
 ]
