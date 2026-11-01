@@ -489,5 +489,248 @@
       "status": "finished"
     }
   ],
-  "race": null
+  "race": [
+    {
+      "position": 1,
+      "race_number": 9,
+      "driver_name": "Borninkhof",
+      "team_name": "PREMA Racing",
+      "num_laps": 12,
+      "total_race_time": "18:15.845",
+      "best_lap_time": "1:26.343",
+      "points": 26,
+      "status": "finished"
+    },
+    {
+      "position": 2,
+      "race_number": 17,
+      "driver_name": "DUNNE",
+      "team_name": "Rodin Motorsport",
+      "num_laps": 12,
+      "total_race_time": "18:20.421",
+      "best_lap_time": "1:27.575",
+      "points": 18,
+      "status": "finished"
+    },
+    {
+      "position": 3,
+      "race_number": 5,
+      "driver_name": "NityeSky",
+      "team_name": "MP Motorsport",
+      "num_laps": 12,
+      "total_race_time": "18:22.210",
+      "best_lap_time": "1:27.302",
+      "points": 15,
+      "status": "finished"
+    },
+    {
+      "position": 4,
+      "race_number": 14,
+      "driver_name": "MARTINS",
+      "team_name": "ART Grand Prix",
+      "num_laps": 12,
+      "total_race_time": "18:22.967",
+      "best_lap_time": "1:27.252",
+      "points": 12,
+      "status": "finished"
+    },
+    {
+      "position": 5,
+      "race_number": 7,
+      "driver_name": "BROWNING",
+      "team_name": "Hitech Pulse-Eight",
+      "num_laps": 12,
+      "total_race_time": "18:23.410",
+      "best_lap_time": "1:27.294",
+      "points": 10,
+      "status": "finished"
+    },
+    {
+      "position": 6,
+      "race_number": 6,
+      "driver_name": "VERSCHOOR",
+      "team_name": "MP Motorsport",
+      "num_laps": 12,
+      "total_race_time": "18:24.701",
+      "best_lap_time": "1:27.479",
+      "points": 8,
+      "status": "finished"
+    },
+    {
+      "position": 7,
+      "race_number": 11,
+      "driver_name": "CRAWFORD",
+      "team_name": "DAMS Lucas Oil",
+      "num_laps": 12,
+      "total_race_time": "18:27.709",
+      "best_lap_time": "1:27.829",
+      "points": 6,
+      "status": "finished"
+    },
+    {
+      "position": 8,
+      "race_number": 22,
+      "driver_name": "MEGUETOUNIF",
+      "team_name": "Trident",
+      "num_laps": 12,
+      "total_race_time": "18:28.482",
+      "best_lap_time": "1:27.867",
+      "points": 4,
+      "status": "finished"
+    },
+    {
+      "position": 9,
+      "race_number": 12,
+      "driver_name": "MAINI",
+      "team_name": "DAMS Lucas Oil",
+      "num_laps": 12,
+      "total_race_time": "18:30.756",
+      "best_lap_time": "1:27.790",
+      "points": 2,
+      "status": "finished"
+    },
+    {
+      "position": 10,
+      "race_number": 4,
+      "driver_name": "LINDBLAD",
+      "team_name": "Campos Racing",
+      "num_laps": 12,
+      "total_race_time": "18:31.049",
+      "best_lap_time": "1:27.168",
+      "points": 1,
+      "status": "finished"
+    },
+    {
+      "position": 11,
+      "race_number": 16,
+      "driver_name": "CORDEEL",
+      "team_name": "Rodin Motorsport",
+      "num_laps": 12,
+      "total_race_time": "18:32.780",
+      "best_lap_time": "1:27.725",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 12,
+      "race_number": 3,
+      "driver_name": "MARTÍ",
+      "team_name": "Campos Racing",
+      "num_laps": 12,
+      "total_race_time": "18:34.297",
+      "best_lap_time": "1:28.751",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 13,
+      "race_number": 24,
+      "driver_name": "Sebastiaan",
+      "team_name": "Van Amersfoort Racing",
+      "num_laps": 12,
+      "total_race_time": "18:37.287",
+      "best_lap_time": "1:26.429",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 14,
+      "race_number": 15,
+      "driver_name": "MIYATA",
+      "team_name": "ART Grand Prix",
+      "num_laps": 12,
+      "total_race_time": "18:37.604",
+      "best_lap_time": "1:28.132",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 15,
+      "race_number": 10,
+      "driver_name": "MINÌ",
+      "team_name": "PREMA Racing",
+      "num_laps": 12,
+      "total_race_time": "18:38.492",
+      "best_lap_time": "1:27.490",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 16,
+      "race_number": 1,
+      "driver_name": "FORNAROLI",
+      "team_name": "Invicta Racing",
+      "num_laps": 12,
+      "total_race_time": "18:40.300",
+      "best_lap_time": "1:28.490",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 17,
+      "race_number": 25,
+      "driver_name": "VILLAGÓMEZ",
+      "team_name": "Van Amersfoort Racing",
+      "num_laps": 12,
+      "total_race_time": "18:40.628",
+      "best_lap_time": "1:28.519",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 18,
+      "race_number": 2,
+      "driver_name": "STANĚK",
+      "team_name": "Invicta Racing",
+      "num_laps": 12,
+      "total_race_time": "18:40.868",
+      "best_lap_time": "1:28.504",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 19,
+      "race_number": 8,
+      "driver_name": "BEGANOVIC",
+      "team_name": "Hitech Pulse-Eight",
+      "num_laps": 12,
+      "total_race_time": "18:41.140",
+      "best_lap_time": "1:28.593",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 20,
+      "race_number": 23,
+      "driver_name": "ESTERSON",
+      "team_name": "Trident",
+      "num_laps": 12,
+      "total_race_time": "18:41.970",
+      "best_lap_time": "1:28.853",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 21,
+      "race_number": 21,
+      "driver_name": "SHIELDS",
+      "team_name": "AIX Racing",
+      "num_laps": 12,
+      "total_race_time": "18:42.266",
+      "best_lap_time": "1:28.241",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 22,
+      "race_number": 20,
+      "driver_name": "DÜRKSEN",
+      "team_name": "AIX Racing",
+      "num_laps": 8,
+      "total_race_time": "14:11.076",
+      "best_lap_time": "1:28.546",
+      "points": 0,
+      "status": "didnotfinish"
+    }
+  ]
 }
