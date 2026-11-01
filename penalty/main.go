@@ -6,6 +6,7 @@ import (
 
 	"GoData/database"
 	"GoData/exporter"
+	"GoData/git"
 
 	"github.com/charmbracelet/huh"
 )
@@ -130,4 +131,6 @@ func main() {
     if err := exporter.ParseRaceWeekendResults(db, race); err != nil {
         log.Fatal("could not export race weekend: ", err)
     }
+
+    git.CommitRaceResult(race, sessionType)
 }

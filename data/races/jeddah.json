@@ -701,23 +701,23 @@
     },
     {
       "position": 20,
-      "race_number": 21,
-      "driver_name": "SHIELDS",
-      "team_name": "AIX Racing",
-      "num_laps": 10,
-      "total_race_time": "18:16.344",
-      "best_lap_time": "1:45.041",
-      "points": 0,
-      "status": "finished"
-    },
-    {
-      "position": 21,
       "race_number": 24,
       "driver_name": "Sebastiaan",
       "team_name": "Van Amersfoort Racing",
       "num_laps": 10,
       "total_race_time": "18:50.261",
       "best_lap_time": "1:43.782",
+      "points": 0,
+      "status": "finished"
+    },
+    {
+      "position": 21,
+      "race_number": 21,
+      "driver_name": "SHIELDS",
+      "team_name": "AIX Racing",
+      "num_laps": 10,
+      "total_race_time": "18:56.344",
+      "best_lap_time": "1:45.041",
       "points": 0,
       "status": "finished"
     },
