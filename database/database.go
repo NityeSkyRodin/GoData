@@ -115,6 +115,15 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		session_type TEXT NOT NULL,
 		team_name TEXT,
 		FOREIGN KEY (session_uid) REFERENCES races(session_uid) ON DELETE CASCADE
+	);
+	CREATE TABLE IF NOT EXISTS pending_penalties (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		race_number INTEGER NOT NULL,
+		driver_name TEXT NOT NULL,
+		seconds INTEGER NOT NULL,
+		origin_session_uid TEXT NOT NULL,
+		applied_session_uid TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`
 
 	if _, err := db.Exec(schema); err != nil {

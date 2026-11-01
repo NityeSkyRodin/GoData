@@ -1,18 +1,44 @@
-/* Custom Scrollbars */
+:root {
+    --f2-blue: #0090D0;
+    --f2-dark: #0B0E14;
+    --f2-card: #151821;
+    --f2-border: #232734;
+}
+
+body {
+    background-color: var(--f2-dark);
+    color: #ffffff;
+    font-family: 'Titillium Web', sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.font-header {
+    font-family: 'Rajdhani', sans-serif;
+}
+
+.slanted {
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+
+.slanted-tab {
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #15151e;
+    background: #15151e;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2d2d38;
-  border-radius: 3px;
+    background: #2d2d38;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #e10600;
+    background: var(--f2-blue);
 }

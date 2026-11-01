@@ -1,11 +1,13 @@
 package main
 
 import (
-    "fmt"
-    "log"
+	"fmt"
+	"log"
 
-    "GoData/database"
-    "github.com/charmbracelet/huh"
+	"GoData/database"
+	"GoData/exporter"
+
+	"github.com/charmbracelet/huh"
 )
 
 type Penalty struct {
@@ -103,4 +105,29 @@ func main() {
 
     fmt.Printf("\n%s | %s | %s | %s (+%d sec)\n",
         driver, race, sessionType, penalty.Label, penalty.Seconds)
+
+
+    carriedOver, err := database.ApplyPenalty(db, database.PenaltyInput{
+        TrackName:    race,
+        SessionType:  sessionType,
+        DriverName:   driver,
+        Seconds:      penalty.Seconds,
+        Disqualified: penalty.Seconds == 0,
+    })
+
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    if carriedOver {
+        fmt.Printf("%s did not finish, 5 sec penalty moves to the next race\n", driver)
+    }
+
+    if err := exporter.ParseFullSeasonResult(db); err != nil {
+        log.Fatal("could not export season results: ", err)
+    }
+
+    if err := exporter.ParseRaceWeekendResults(db, race); err != nil {
+        log.Fatal("could not export race weekend: ", err)
+    }
 }

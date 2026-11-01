@@ -142,5 +142,15 @@ func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, p
 		return result, err
 	}
 
+	n, err := database.ApplyPendingPenalties(db, databaseResult.SessionUID)
+	
+	if err != nil {
+    	return result, err
+	}
+	
+	if n > 0 {
+    	fmt.Printf("%d carried over penalties applied\n", n)
+	}
+
 	return result, nil
 }
