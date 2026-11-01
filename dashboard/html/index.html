@@ -47,80 +47,72 @@
     <main class="flex-1 min-w-0 w-full p-5 lg:p-10 max-w-[1400px] mx-auto">
 
         <div id="view-overview">
-            <div class="mb-10">
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="px-2 py-1 slanted bg-[#0090D0] text-[10px] font-black uppercase tracking-widest text-white">Season 2026</span>
-                    <span id="season-status" class="text-[10px] uppercase tracking-widest text-slate-500 font-bold"></span>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
+                <div>
+                    <span class="inline-block px-3 py-1.5 corner-cut bg-[#0090D0]/10 border border-[#0090D0]/40 text-[10px] font-black uppercase tracking-[0.2em] text-[#0090D0]">Season 2026</span>
+                    <h1 class="font-header text-5xl md:text-7xl font-black uppercase italic tracking-tight mt-3">Championship</h1>
                 </div>
-                <h1 class="font-header text-6xl md:text-8xl font-black uppercase italic tracking-tighter">STANDINGS</h1>
-            </div>
-
-            <div id="stats-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-10"></div>
-
-            <div class="bg-[#151821] border border-[#232734] slanted p-5 lg:p-8">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <h2 class="font-header text-3xl font-black uppercase italic tracking-wide">Classification</h2>
-                    <div class="flex gap-2 bg-[#0B0E14] p-1 slanted">
-                        <button id="toggle-drivers" class="px-6 py-2 slanted text-xs font-bold uppercase tracking-wider bg-[#0090D0] text-white transition-colors">Drivers</button>
-                        <button id="toggle-teams" class="px-6 py-2 slanted text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-white transition-colors">Teams</button>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[500px]">
-                        <thead>
-                            <tr class="text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
-                                <th class="text-left py-3 px-4 w-16">Pos</th>
-                                <th id="standings-name-header" class="text-left py-3 px-4">Driver</th>
-                                <th id="standings-team-header" class="text-left py-3 px-4">Team</th>
-                                <th class="text-right py-3 px-4">Points</th>
-                            </tr>
-                        </thead>
-                        <tbody id="standings-table-body"></tbody>
-                    </table>
+                <div class="flex gap-1 bg-[#10141C] border border-[#232734] p-1 corner-cut">
+                    <button id="toggle-drivers" class="px-6 py-2.5 corner-cut font-header text-base font-bold uppercase tracking-[0.15em] bg-[#0090D0] text-white transition-colors">Drivers</button>
+                    <button id="toggle-teams" class="px-6 py-2.5 corner-cut font-header text-base font-bold uppercase tracking-[0.15em] text-slate-500 hover:text-white transition-colors">Teams</button>
                 </div>
             </div>
+
+            <div id="stats-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-14"></div>
+
+            <h2 class="section-heading font-header text-2xl md:text-3xl font-black uppercase italic tracking-wide mb-6">Top 3 Standings</h2>
+            <div id="standings-podium" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
+
+            <div id="standings-table-wrapper" class="bg-[#10141C] border border-[#232734] corner-cut overflow-x-auto mb-14">
+                <table class="w-full min-w-[500px]">
+                    <thead>
+                        <tr class="bg-[#151821] text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
+                            <th class="text-left py-4 px-5 w-16">Pos</th>
+                            <th id="standings-number-header" class="text-left py-4 px-5 w-16">#</th>
+                            <th id="standings-name-header" class="text-left py-4 px-5">Driver</th>
+                            <th id="standings-team-header" class="text-left py-4 px-5">Team</th>
+                            <th class="text-right py-4 px-5">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standings-table-body"></tbody>
+                </table>
+            </div>
+
+            <h2 class="section-heading font-header text-2xl md:text-3xl font-black uppercase italic tracking-wide mb-6">Race Calendar</h2>
+            <div id="race-calendar" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
         </div>
 
         <div id="view-race" class="hidden">
-            <div class="mb-10">
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="px-2 py-1 slanted bg-[#0090D0] text-[10px] font-black uppercase tracking-widest text-white">Event</span>
-                    <span id="race-subtitle" class="text-[10px] uppercase tracking-widest text-slate-500 font-bold"></span>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
+                <div>
+                    <span id="race-subtitle" class="inline-block px-3 py-1.5 corner-cut bg-[#0090D0]/10 border border-[#0090D0]/40 text-[10px] font-black uppercase tracking-[0.2em] text-[#0090D0]"></span>
+                    <h1 id="race-title" class="font-header text-5xl md:text-7xl font-black uppercase italic tracking-tight mt-3"></h1>
                 </div>
-                <h1 id="race-title" class="font-header text-5xl md:text-7xl font-black uppercase italic tracking-tighter"></h1>
+                <div id="session-tabs" class="flex gap-1 bg-[#10141C] border border-[#232734] p-1 corner-cut overflow-x-auto max-w-full"></div>
             </div>
 
-            <div id="session-tabs" class="flex gap-2 mb-6 overflow-x-auto pb-2"></div>
+            <div id="race-stats-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-14"></div>
 
-            <div id="race-stats-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-10"></div>
+            <h2 id="session-title" class="section-heading font-header text-2xl md:text-3xl font-black uppercase italic tracking-wide mb-6"></h2>
+            <div id="race-podium" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
 
-            <div class="bg-[#151821] border border-[#232734] slanted p-5 lg:p-8 relative overflow-hidden">
-                <div class="absolute top-0 right-0 opacity-5 pointer-events-none font-header font-black italic text-[200px] leading-none transform translate-x-10 -translate-y-10">F2</div>
-
-                <div class="relative z-10 mb-8 border-b border-[#232734] pb-6">
-                    <h2 id="session-title" class="font-header text-3xl font-black uppercase italic tracking-wide text-[#0090D0]"></h2>
-                    <div id="session-description" class="text-xs uppercase tracking-widest text-slate-500 font-bold mt-1"></div>
-                </div>
-
-                <div class="overflow-x-auto relative z-10">
-                    <table class="w-full min-w-[800px]">
-                        <thead>
-                            <tr class="text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
-                                <th class="text-left py-3 px-3 md:px-4 w-12">Pos</th>
-                                <th class="text-left py-3 px-3 md:px-4 w-12">#</th>
-                                <th class="text-left py-3 px-3 md:px-4">Driver</th>
-                                <th class="text-left py-3 px-3 md:px-4">Team</th>
-                                <th class="text-center py-3 px-3 md:px-4">Laps</th>
-                                <th class="text-left py-3 px-3 md:px-4">Best Lap</th>
-                                <th class="text-left py-3 px-3 md:px-4">Time</th>
-                                <th class="text-center py-3 px-3 md:px-4">Status</th>
-                                <th class="text-right py-3 px-3 md:px-4">Points</th>
-                            </tr>
-                        </thead>
-                        <tbody id="race-table-body"></tbody>
-                    </table>
-                </div>
+            <div id="race-table-wrapper" class="bg-[#10141C] border border-[#232734] corner-cut overflow-x-auto">
+                <table class="w-full min-w-[800px]">
+                    <thead>
+                        <tr class="bg-[#151821] text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
+                            <th class="text-left py-4 px-4 w-12">Pos</th>
+                            <th class="text-left py-4 px-4 w-12">#</th>
+                            <th class="text-left py-4 px-4">Driver</th>
+                            <th class="text-left py-4 px-4">Team</th>
+                            <th class="text-center py-4 px-4">Laps</th>
+                            <th class="text-left py-4 px-4">Best Lap</th>
+                            <th class="text-left py-4 px-4">Time</th>
+                            <th class="text-center py-4 px-4">Status</th>
+                            <th class="text-right py-4 px-4">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="race-table-body"></tbody>
+                </table>
             </div>
         </div>
 
