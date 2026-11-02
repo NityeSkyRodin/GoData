@@ -29,12 +29,10 @@ body {
     clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
 }
 
-/* Only the bottom-right corner is cut off, like the cards in the design */
 .corner-cut {
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
 }
 
-/* Big faded number in the bottom-right corner of a card */
 .watermark {
     position: absolute;
     right: -4px;
