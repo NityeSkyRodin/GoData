@@ -213,7 +213,7 @@ let teamChampionship = [];
 let currentRace = null;
 let currentSession = 'race';
 let standingsMode = 'drivers';
-let allRacesCache = null;
+let allRacesPromise = null;
  
 document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
@@ -265,22 +265,27 @@ async function loadRaceIndex() {
     raceIndex = await response.json();
 }
  
-async function fetchAllRacesForStats() {
-    if (allRacesCache) return allRacesCache;
-    allRacesCache = [];
- 
+// De Promise wordt gecachet, niet de array: zo wachten de form guide en de
+// grafiek op hetzelfde laadwerk en krijgt niemand een half gevulde lijst.
+function fetchAllRacesForStats() {
+    if (!allRacesPromise) allRacesPromise = loadAllRaces();
+    return allRacesPromise;
+}
+
+async function loadAllRaces() {
+    const races = [];
     for (const race of raceIndex) {
         try {
             const res = await fetch(`./data/races/${race.file}`);
             if (res.ok) {
                 const data = await res.json();
-                allRacesCache.push({ track: race.track_name, data, ...race });
+                races.push({ track: race.track_name, data, ...race });
             }
         } catch(e) {
             console.error(`Kon ${race.file} niet laden voor stats.`, e);
         }
     }
-    return allRacesCache;
+    return races;
 }
  
  
@@ -503,11 +508,14 @@ async function drawChampionshipChart() {
     const races = await fetchAllRacesForStats();
  
     races.forEach(race => {
-        const res = race.data.race || [];
         top5.forEach(d => {
-            const driverRes = res.find(r => r.driver_name === d.driver_name);
+            // Alle sessies meetellen, zodat de lijn eindigt op de stand in championship.json.
+            const weekendPts = ['qualifying', 'sprint', 'race'].reduce((sum, session) => {
+                const driverRes = (race.data[session] || []).find(r => r.driver_name === d.driver_name);
+                return sum + (driverRes?.points || 0);
+            }, 0);
             const prevPts = history[d.driver_name][history[d.driver_name].length - 1];
-            history[d.driver_name].push(prevPts + (driverRes?.points || 0));
+            history[d.driver_name].push(prevPts + weekendPts);
         });
     });
  
