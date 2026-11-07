@@ -581,6 +581,14 @@ async function drawChampionshipChart() {
             ${paths}
         </svg>
     `;
+
+    document.getElementById('champ-legend').innerHTML = top5.map((d, i) => `
+        <button data-driver="${d.driver_name}" class="flex items-center gap-2 font-header text-sm font-bold uppercase tracking-wider text-slate-400 hover:text-white transition-colors">
+            <span class="w-3 h-3 rounded-full" style="background: ${colors[i]}; opacity: ${i === 0 ? 1 : 0.6}"></span>
+            ${d.driver_name}
+            <span class="text-slate-600">${d.points}</span>
+        </button>
+    `).join('');
 }
  
 // ---------- Race weekend ----------
@@ -804,12 +812,13 @@ async function showDriver(driverName) {
 
     renderDriverStats(races, driver, position);
     renderDriverPointsChart(races, driver);
+    renderDriverPositionChart(races, driver);
     renderHeadToHead(races, driver);
     renderDriverResults(races, driver);
 }
 
 function getDriverStats(races, driverName) {
-    const stats = { wins: 0, podiums: 0, poles: 0, fastestLaps: 0, dnfs: 0, finishes: [] };
+    const stats = { wins: 0, podiums: 0, poles: 0, fastestLaps: 0, dnfs: 0, finishes: { sprint: [], race: [] } };
 
     races.forEach(race => {
         if (findResult(race, 'qualifying', driverName)?.position === 1) stats.poles++;
@@ -822,7 +831,7 @@ function getDriverStats(races, driverName) {
                 stats.dnfs++;
                 return;
             }
-            stats.finishes.push(result.position);
+            stats.finishes[session].push(result.position);
             if (result.position === 1) stats.wins++;
             if (result.position <= 3) stats.podiums++;
         });
@@ -830,23 +839,80 @@ function getDriverStats(races, driverName) {
     return stats;
 }
 
+function average(numbers) {
+    return numbers.length ? (numbers.reduce((a, b) => a + b, 0) / numbers.length).toFixed(1) : '--';
+}
+
 function renderDriverStats(races, driver, position) {
     const stats = getDriverStats(races, driver.driver_name);
-    const finishes = stats.finishes;
-    const avg = finishes.length ? (finishes.reduce((a, b) => a + b, 0) / finishes.length).toFixed(1) : '--';
+    const finishes = [...stats.finishes.sprint, ...stats.finishes.race];
     const best = finishes.length ? Math.min(...finishes) : null;
     const bestCount = finishes.filter(p => p === best).length;
 
+    // The leader has no one to chase, so show the lead over P2 instead
+    const leader = championship[0];
+    const ahead = championship[position - 1];
+    const behind = championship[position + 1];
+    const leaderCard = position === 0
+        ? statCard('Lead', behind ? `+${driver.points - behind.points}` : '--', { sub: behind ? `Over ${behind.driver_name}` : '', index: 1 })
+        : statCard('Gap to Leader', `-${leader.points - driver.points}`, { sub: leader.driver_name, index: 1 });
+    const aheadCard = ahead
+        ? statCard('Gap Ahead', `-${ahead.points - driver.points}`, { sub: `P${position} ${ahead.driver_name}`, index: 2 })
+        : statCard('Gap Ahead', '--', { sub: 'Leading', index: 2 });
+
     document.getElementById('driver-stats-cards').innerHTML = [
         statCard('Championship', `P${position + 1}`, { sub: `${driver.points} PTS`, accent: true, index: 0 }),
-        statCard('Wins', stats.wins, { sub: 'Sprint + Feature', index: 1 }),
-        statCard('Podiums', stats.podiums, { sub: 'Sprint + Feature', index: 2 }),
-        statCard('Poles', stats.poles, { index: 3 }),
-        statCard('Fastest Laps', stats.fastestLaps, { sub: 'Feature', index: 4 }),
-        statCard('Avg Finish', avg, { sub: 'Sprint + Feature', index: 5 }),
-        statCard('Best Finish', best ? `P${best}` : '--', { sub: best ? `${bestCount}x` : '', index: 6 }),
-        statCard('DNFs', stats.dnfs, { index: 7 })
+        leaderCard,
+        aheadCard,
+        statCard('Best Finish', best ? `P${best}` : '--', { sub: best ? `${bestCount}x` : '', index: 3 }),
+        statCard('Wins', stats.wins, { sub: 'Sprint + Feature', index: 4 }),
+        statCard('Podiums', stats.podiums, { sub: 'Sprint + Feature', index: 5 }),
+        statCard('Poles', stats.poles, { index: 6 }),
+        statCard('Fastest Laps', stats.fastestLaps, { sub: 'Feature', index: 7 }),
+        statCard('Avg Finish', average(finishes), { sub: 'Sprint + Feature', index: 8 }),
+        statCard('Avg Sprint', average(stats.finishes.sprint), { sub: `${stats.finishes.sprint.length} finishes`, index: 9 }),
+        statCard('Avg Feature', average(stats.finishes.race), { sub: `${stats.finishes.race.length} finishes`, index: 10 }),
+        statCard('DNFs', stats.dnfs, { index: 11 })
     ].join('');
+}
+
+// Championship order after every round, as a list of driver names per round
+function getStandingsPerRound(races) {
+    const totals = new Map(championship.map(d => [d.driver_name, 0]));
+    return races.map(race => {
+        totals.forEach((points, name) => totals.set(name, points + weekendPoints(race, name)));
+        return [...totals].sort((a, b) => b[1] - a[1]).map(([name]) => name);
+    });
+}
+
+function renderDriverPositionChart(races, driver) {
+    const positions = getStandingsPerRound(races).map(order => order.indexOf(driver.driver_name) + 1);
+    const fieldSize = championship.length;
+    // P1 at the top, last place at the bottom, with some room for the labels
+    const y = pos => 12 + (pos - 1) / Math.max(fieldSize - 1, 1) * 76;
+    const x = i => (i + 0.5) / races.length * 100;
+    const line = positions.map((pos, i) => `${x(i)},${y(pos)}`).join(' ');
+
+    document.getElementById('driver-position-chart').innerHTML = `
+        <div class="relative h-44">
+            <span class="absolute left-0 top-0 text-[10px] font-bold uppercase tracking-wider text-slate-600">P1</span>
+            <span class="absolute left-0 bottom-0 text-[10px] font-bold uppercase tracking-wider text-slate-600">P${fieldSize}</span>
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <polyline points="${line}" fill="none" stroke="#0090D0" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+            </svg>
+            ${positions.map((pos, i) => `
+                <div class="absolute flex flex-col items-center -translate-x-1/2 -translate-y-full" style="left: ${x(i)}%; top: ${y(pos)}%" title="${races[i].track_name}: P${pos}">
+                    <span class="font-header font-bold text-sm ${pos <= 3 ? 'text-white' : 'text-slate-400'} mb-1">P${pos}</span>
+                    <span class="w-3 h-3 rounded-full bg-[#0090D0] border-2 border-[#10141C] translate-y-1/2"></span>
+                </div>
+            `).join('')}
+        </div>
+        <div class="flex gap-2 mt-3">
+            ${races.map(race => `
+                <span class="flex-1 min-w-0 text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate text-center">${race.track_name.slice(0, 3)}</span>
+            `).join('')}
+        </div>
+    `;
 }
 
 function renderDriverPointsChart(races, driver) {
