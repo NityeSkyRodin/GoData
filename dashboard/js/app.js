@@ -235,6 +235,13 @@ function initEventListeners() {
     });
     document.getElementById('toggle-drivers').addEventListener('click', () => setStandingsMode('drivers'));
     document.getElementById('toggle-teams').addEventListener('click', () => setStandingsMode('teams'));
+    document.getElementById('driver-back').addEventListener('click', showOverview);
+
+    // Every element with data-driver opens that driver's profile, also when it's rendered later
+    document.addEventListener('click', event => {
+        const target = event.target.closest('[data-driver]');
+        if (target) showDriver(target.dataset.driver);
+    });
 }
  
 async function loadChampionship() {
@@ -304,9 +311,14 @@ function setupSidebar() {
     });
 }
  
+function showView(viewId) {
+    ['view-overview', 'view-race', 'view-driver'].forEach(id => {
+        document.getElementById(id).classList.toggle('hidden', id !== viewId);
+    });
+}
+
 function showOverview() {
-    document.getElementById('view-overview').classList.remove('hidden');
-    document.getElementById('view-race').classList.add('hidden');
+    showView('view-overview');
     updateActiveNav('nav-overview');
 }
  
@@ -329,7 +341,7 @@ function trackSvg(trackName, { strokeWidth = 8, extraAttrs = '', className = 'w-
  
 function statCard(label, value, { sub = '', accent = false, index = 0 } = {}) {
     // Numbers get a big font, names a smaller uppercase one so they still fit
-    const isNumber = typeof value === 'number' || /^[\d/+-]+$/.test(String(value));
+    const isNumber = typeof value === 'number' || /^P?[\d./+-]+$/.test(String(value));
     const valueClass = isNumber ? 'text-4xl' : 'text-xl uppercase tracking-wide truncate';
     return `
         <div class="relative overflow-hidden bg-[#10141C] border border-[#232734] corner-cut p-5 min-h-[104px]">
@@ -341,37 +353,54 @@ function statCard(label, value, { sub = '', accent = false, index = 0 } = {}) {
     `;
 }
  
+// Small square badge for one result: '-' when absent, X for a DNF, blue for podiums
+function positionBadge(result, size = 'w-6 h-6') {
+    const base = `${size} inline-flex items-center justify-center corner-cut`;
+    if (!result) {
+        return `<span class="${base} bg-[#151821] text-slate-600 border border-[#232734]">-</span>`;
+    }
+    const pos = result.position;
+    if (!isFinished(result)) {
+        return `<span class="${base} bg-red-500/10 text-red-400 border border-red-500/20">X</span>`;
+    } else if (pos === 1) {
+        return `<span class="${base} bg-[#0090D0] text-white font-black">1</span>`;
+    } else if (pos <= 3) {
+        return `<span class="${base} bg-[#0090D0]/30 text-white border border-[#0090D0]/50 font-bold">${pos}</span>`;
+    } else if (pos <= 10) {
+        return `<span class="${base} bg-[#232734] text-white border border-[#232734]">${pos}</span>`;
+    }
+    return `<span class="${base} bg-[#151821] text-slate-400 border border-[#232734]">${pos}</span>`;
+}
+
 // Build form guide (last 5 races)
 async function getFormGuide(driverName) {
     const races = await fetchAllRacesForStats();
-    let formHTML = '';
-    const recent = races.slice(-5);
- 
-    recent.forEach(race => {
-        const feature = race.data.race ?? [];
-        const result = feature.find(d => d.driver_name === driverName);
- 
-        if (!result) {
-            formHTML += `<span class="w-6 h-6 flex items-center justify-center bg-[#151821] text-slate-600 border border-[#232734] corner-cut">-</span>`;
-        } else {
-            const pos = result.position;
-            const status = String(result.status).toLowerCase();
- 
-            if (status !== 'finished') {
-                formHTML += `<span class="w-6 h-6 flex items-center justify-center bg-red-500/10 text-red-400 border border-red-500/20 corner-cut">X</span>`;
-            } else if (pos === 1) {
-                formHTML += `<span class="w-6 h-6 flex items-center justify-center bg-[#0090D0] text-white corner-cut font-black">1</span>`;
-            } else if (pos <= 3) {
-                formHTML += `<span class="w-6 h-6 flex items-center justify-center bg-[#0090D0]/30 text-white border border-[#0090D0]/50 corner-cut font-bold">${pos}</span>`;
-            } else if (pos <= 10) {
-                formHTML += `<span class="w-6 h-6 flex items-center justify-center bg-[#232734] text-white border border-[#232734] corner-cut">${pos}</span>`;
-            } else {
-                formHTML += `<span class="w-6 h-6 flex items-center justify-center bg-[#151821] text-slate-400 border border-[#232734] corner-cut">${pos}</span>`;
-            }
-        }
-    });
- 
+    const formHTML = races.slice(-5)
+        .map(race => positionBadge(findResult(race, 'race', driverName)))
+        .join('');
+
     return `<div class="flex items-center gap-1 font-header text-[11px]">${formHTML}</div>`;
+}
+
+// ---------- Result helpers ----------
+
+function findResult(race, session, driverName) {
+    return (race.data[session] || []).find(r => r.driver_name === driverName);
+}
+
+function weekendPoints(race, driverName) {
+    return ['qualifying', 'sprint', 'race'].reduce((sum, session) =>
+        sum + (findResult(race, session, driverName)?.points || 0), 0);
+}
+
+function isFinished(result) {
+    return String(result?.status).toLowerCase() === 'finished';
+}
+
+function getFastestLap(results) {
+    return results
+        .filter(driver => parseLapTime(driver.best_lap_time) !== null)
+        .sort((a, b) => parseLapTime(a.best_lap_time) - parseLapTime(b.best_lap_time))[0];
 }
  
 // ---------- Overview ----------
@@ -433,7 +462,9 @@ async function renderStandings() {
                         <div class="text-[10px] font-bold ${first ? 'text-white/70' : 'text-slate-500'}">${gapStr}</div>
                     </div>
                 </div>
-                <div class="relative z-10 font-header text-2xl font-black uppercase text-white mt-1 truncate">${isDrivers ? item.driver_name : item.team_name}</div>
+                ${isDrivers
+                    ? `<button data-driver="${item.driver_name}" class="relative z-10 block max-w-full font-header text-2xl font-black uppercase text-white mt-1 truncate hover:underline">${item.driver_name}</button>`
+                    : `<div class="relative z-10 font-header text-2xl font-black uppercase text-white mt-1 truncate">${item.team_name}</div>`}
                 ${isDrivers ? `<div class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] mt-1 truncate ${first ? 'text-white/80' : 'text-[#0090D0]'}">${item.team_name}</div>` : ''}
                 <div class="mt-4">${formGuide}</div>
                 <div class="watermark ${first ? 'watermark-on-blue' : ''}">${isDrivers ? item.driver_number : index + 1}</div>
@@ -461,7 +492,9 @@ async function renderStandings() {
             <tr class="hover:bg-[#151821] transition-colors border-b border-[#232734]/60 last:border-0">
                 <td class="py-4 px-5 font-header font-black text-xl text-slate-500">${index + 4}</td>
                 <td class="py-4 px-5 font-header font-bold text-lg text-slate-500 ${!isDrivers ? 'hidden' : ''}">${item.driver_number ?? '-'}</td>
-                <td class="py-4 px-5 font-header font-bold text-lg text-white uppercase tracking-wide">${isDrivers ? item.driver_name : item.team_name}</td>
+                <td class="py-4 px-5 font-header font-bold text-lg text-white uppercase tracking-wide">${isDrivers
+                    ? `<button data-driver="${item.driver_name}" class="uppercase hover:text-[#0090D0] transition-colors">${item.driver_name}</button>`
+                    : item.team_name}</td>
                 <td class="py-4 px-5 text-xs font-bold uppercase tracking-[0.15em] text-slate-500 ${!isDrivers ? 'hidden' : ''}">${item.team_name}</td>
                 <td class="py-4 px-5 ${!isDrivers ? 'hidden' : ''}">${formGuide}</td>
                 <td class="py-4 px-5 text-right">
@@ -510,12 +543,8 @@ async function drawChampionshipChart() {
     races.forEach(race => {
         top5.forEach(d => {
             // Alle sessies meetellen, zodat de lijn eindigt op de stand in championship.json.
-            const weekendPts = ['qualifying', 'sprint', 'race'].reduce((sum, session) => {
-                const driverRes = (race.data[session] || []).find(r => r.driver_name === d.driver_name);
-                return sum + (driverRes?.points || 0);
-            }, 0);
             const prevPts = history[d.driver_name][history[d.driver_name].length - 1];
-            history[d.driver_name].push(prevPts + weekendPts);
+            history[d.driver_name].push(prevPts + weekendPoints(race, d.driver_name));
         });
     });
  
@@ -571,8 +600,7 @@ async function loadRace(raceEntry) {
 }
  
 function renderRace(race, index) {
-    document.getElementById('view-overview').classList.add('hidden');
-    document.getElementById('view-race').classList.remove('hidden');
+    showView('view-race');
     document.getElementById('sidebar').classList.add('-translate-x-full');
     updateActiveNav(null);
     window.scrollTo(0, 0);
@@ -639,16 +667,13 @@ function renderSession(results, session) {
  
     const sorted = [...results].sort((a, b) => a.position - b.position);
  
-    // Find absolute fastest lap object
-    const fastest = sorted
-        .filter(driver => parseLapTime(driver.best_lap_time) !== null)
-        .sort((a, b) => parseLapTime(a.best_lap_time) - parseLapTime(b.best_lap_time))[0];
+    const fastest = getFastestLap(sorted);
  
     // Reference time for intervals (first finisher)
     const leaderTime = parseLapTime(sorted[0]?.total_race_time);
  
     document.getElementById('race-table-body').innerHTML = sorted.map(driver => {
-        const finished = String(driver.status).toLowerCase() === 'finished';
+        const finished = isFinished(driver);
         const isFastest = fastest && driver.driver_name === fastest.driver_name;
  
         // Calculate interval
@@ -692,7 +717,9 @@ function renderSession(results, session) {
                     P${driver.position} ${deltaHtml}
                 </td>
                 <td class="py-4 px-4 font-header font-bold text-lg text-slate-500">${driver.race_number ?? '-'}</td>
-                <td class="py-4 px-4 font-header font-bold text-lg text-white uppercase tracking-wide">${driver.driver_name}</td>
+                <td class="py-4 px-4 font-header font-bold text-lg text-white uppercase tracking-wide">
+                    <button data-driver="${driver.driver_name}" class="uppercase hover:text-[#0090D0] transition-colors">${driver.driver_name}</button>
+                </td>
                 <td class="py-4 px-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-500">${driver.team_name ?? '-'}</td>
                 <td class="py-4 px-4 text-center font-header font-bold text-lg text-slate-300">${driver.num_laps ?? '-'}</td>
                 <td class="py-4 px-4 font-header font-bold text-base text-slate-400">${bestLapDisplay}</td>
@@ -720,10 +747,8 @@ function renderRaceStats(results) {
     const winner = results.find(driver => driver.position === 1);
     const pole = currentRace?.qualifying?.find(driver => driver.position === 1);
  
-    const fastest = results
-        .filter(driver => parseLapTime(driver.best_lap_time) !== null)
-        .sort((a, b) => parseLapTime(a.best_lap_time) - parseLapTime(b.best_lap_time))[0];
- 
+    const fastest = getFastestLap(results);
+
     // Calculate biggest mover
     let biggestMover = null;
     let maxPositionsGained = 0;
@@ -750,7 +775,7 @@ function renderRaceStats(results) {
     if (biggestMover && maxPositionsGained > 0) {
         cards.push(statCard('Biggest Mover', biggestMover.driver_name, { sub: `+${maxPositionsGained} Positions`, accent: true, index: 3 }));
     } else {
-        const finishers = results.filter(driver => String(driver.status).toLowerCase() === 'finished').length;
+        const finishers = results.filter(isFinished).length;
         const dnfs = results.length - finishers;
         cards.push(statCard('Finished', `${finishers}/${results.length}`, { sub: `${dnfs} DNF`, accent: dnfs === 0, index: 3 }));
     }
@@ -758,6 +783,158 @@ function renderRaceStats(results) {
     document.getElementById('race-stats-cards').innerHTML = cards.join('');
 }
  
+// ---------- Driver profile ----------
+
+async function showDriver(driverName) {
+    const position = championship.findIndex(d => d.driver_name === driverName);
+    if (position === -1) {
+        console.warn(`"${driverName}" staat niet in championship.json.`);
+        return;
+    }
+    const driver = championship[position];
+    const races = await fetchAllRacesForStats();
+
+    showView('view-driver');
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    updateActiveNav(null);
+    window.scrollTo(0, 0);
+
+    document.getElementById('driver-title').textContent = driver.driver_name;
+    document.getElementById('driver-subtitle').textContent = `#${driver.driver_number} · ${driver.team_name}`;
+
+    renderDriverStats(races, driver, position);
+    renderDriverPointsChart(races, driver);
+    renderHeadToHead(races, driver);
+    renderDriverResults(races, driver);
+}
+
+function getDriverStats(races, driverName) {
+    const stats = { wins: 0, podiums: 0, poles: 0, fastestLaps: 0, dnfs: 0, finishes: [] };
+
+    races.forEach(race => {
+        if (findResult(race, 'qualifying', driverName)?.position === 1) stats.poles++;
+        if (getFastestLap(race.data.race || [])?.driver_name === driverName) stats.fastestLaps++;
+
+        ['sprint', 'race'].forEach(session => {
+            const result = findResult(race, session, driverName);
+            if (!result) return;
+            if (!isFinished(result)) {
+                stats.dnfs++;
+                return;
+            }
+            stats.finishes.push(result.position);
+            if (result.position === 1) stats.wins++;
+            if (result.position <= 3) stats.podiums++;
+        });
+    });
+    return stats;
+}
+
+function renderDriverStats(races, driver, position) {
+    const stats = getDriverStats(races, driver.driver_name);
+    const finishes = stats.finishes;
+    const avg = finishes.length ? (finishes.reduce((a, b) => a + b, 0) / finishes.length).toFixed(1) : '--';
+    const best = finishes.length ? Math.min(...finishes) : null;
+    const bestCount = finishes.filter(p => p === best).length;
+
+    document.getElementById('driver-stats-cards').innerHTML = [
+        statCard('Championship', `P${position + 1}`, { sub: `${driver.points} PTS`, accent: true, index: 0 }),
+        statCard('Wins', stats.wins, { sub: 'Sprint + Feature', index: 1 }),
+        statCard('Podiums', stats.podiums, { sub: 'Sprint + Feature', index: 2 }),
+        statCard('Poles', stats.poles, { index: 3 }),
+        statCard('Fastest Laps', stats.fastestLaps, { sub: 'Feature', index: 4 }),
+        statCard('Avg Finish', avg, { sub: 'Sprint + Feature', index: 5 }),
+        statCard('Best Finish', best ? `P${best}` : '--', { sub: best ? `${bestCount}x` : '', index: 6 }),
+        statCard('DNFs', stats.dnfs, { index: 7 })
+    ].join('');
+}
+
+function renderDriverPointsChart(races, driver) {
+    const points = races.map(race => weekendPoints(race, driver.driver_name));
+    const max = Math.max(...points, 1);
+
+    document.getElementById('driver-points-chart').innerHTML = races.map((race, i) => `
+        <div class="flex-1 min-w-0 flex flex-col items-center gap-2" title="${race.track_name}: ${points[i]} pts">
+            <span class="font-header font-bold text-sm ${points[i] > 0 ? 'text-white' : 'text-slate-600'}">${points[i]}</span>
+            <div class="flex-1 w-full flex items-end">
+                <div class="w-full corner-cut ${points[i] > 0 ? 'bg-[#0090D0]' : 'bg-[#232734]'}" style="height: ${Math.max(points[i] / max * 100, 3)}%"></div>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate w-full text-center">${race.track_name.slice(0, 3)}</span>
+        </div>
+    `).join('');
+}
+
+function renderHeadToHead(races, driver) {
+    const container = document.getElementById('driver-h2h');
+    // championship is sorted on points, so with multiple teammates (e.g. a sub) the regular one comes first
+    const mate = championship.find(d => d.team_name === driver.team_name && d.driver_name !== driver.driver_name);
+    if (!mate) {
+        container.innerHTML = `<div class="text-sm text-slate-500">No teammate found.</div>`;
+        return;
+    }
+
+    const rows = [
+        { key: 'qualifying', label: 'Qualifying' },
+        { key: 'sprint', label: 'Sprint' },
+        { key: 'race', label: 'Feature' }
+    ].map(({ key, label }) => {
+        let ahead = 0, behind = 0;
+        races.forEach(race => {
+            const mine = findResult(race, key, driver.driver_name);
+            const theirs = findResult(race, key, mate.driver_name);
+            if (!mine || !theirs) return;
+            mine.position < theirs.position ? ahead++ : behind++;
+        });
+        return { label, ahead, behind };
+    });
+    rows.push({ label: 'Points', ahead: driver.points, behind: mate.points });
+
+    container.innerHTML = `
+        <div class="flex justify-between items-end gap-4 mb-6">
+            <div class="font-header text-xl md:text-2xl font-black uppercase italic text-[#0090D0] truncate">${driver.driver_name}</div>
+            <button data-driver="${mate.driver_name}" class="font-header text-xl md:text-2xl font-black uppercase italic text-slate-400 hover:text-white transition-colors truncate">${mate.driver_name}</button>
+        </div>
+        <div class="space-y-4">
+            ${rows.map(row => {
+                const total = row.ahead + row.behind;
+                const share = total ? row.ahead / total * 100 : 50;
+                return `
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="font-header font-black text-lg ${row.ahead > row.behind ? 'text-white' : 'text-slate-500'}">${row.ahead}</span>
+                            <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">${row.label}</span>
+                            <span class="font-header font-black text-lg ${row.behind > row.ahead ? 'text-white' : 'text-slate-500'}">${row.behind}</span>
+                        </div>
+                        <div class="flex h-2 bg-[#232734]">
+                            <div class="bg-[#0090D0]" style="width: ${share}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+function renderDriverResults(races, driver) {
+    const body = document.getElementById('driver-results-body');
+    body.innerHTML = races.map((race, i) => `
+        <tr data-race-file="${race.file}" class="driver-result-row cursor-pointer hover:bg-[#151821] transition-colors border-b border-[#232734]/60 last:border-0">
+            <td class="py-4 px-5 font-header font-black text-lg text-slate-500">${twoDigits(i + 1)}</td>
+            <td class="py-4 px-5 font-header font-bold text-lg text-white uppercase tracking-wide">${race.track_name}</td>
+            ${['qualifying', 'sprint', 'race'].map(session => `
+                <td class="py-4 px-5 text-center font-header text-sm">
+                    ${race.data[session]?.length ? positionBadge(findResult(race, session, driver.driver_name), 'w-8 h-8') : '<span class="text-slate-700">·</span>'}
+                </td>
+            `).join('')}
+            <td class="py-4 px-5 text-right font-header font-black text-xl ${weekendPoints(race, driver.driver_name) > 0 ? 'text-[#0090D0]' : 'text-slate-600'}">${weekendPoints(race, driver.driver_name)}</td>
+        </tr>
+    `).join('');
+
+    body.querySelectorAll('.driver-result-row').forEach(row => {
+        row.addEventListener('click', () => loadRace(raceIndex.find(r => r.file === row.dataset.raceFile)));
+    });
+}
+
 function updateActiveNav(activeId) {
     document.querySelectorAll('#sidebar button').forEach(button => {
         if (button.id === 'mobile-menu-btn') return;

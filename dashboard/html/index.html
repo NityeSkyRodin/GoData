@@ -127,6 +127,43 @@
             </div>
         </div>
 
+        <div id="view-driver" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10 relative">
+                <div class="relative z-10 min-w-0">
+                    <span id="driver-subtitle" class="inline-block px-3 py-1.5 corner-cut bg-[#0090D0]/10 border border-[#0090D0]/40 text-[10px] font-black uppercase tracking-[0.2em] text-[#0090D0]"></span>
+                    <h1 id="driver-title" class="font-header text-5xl md:text-7xl font-black uppercase italic tracking-tight mt-3 text-white truncate pr-3"></h1>
+                </div>
+                <button id="driver-back" class="px-6 py-2.5 corner-cut bg-[#10141C] border border-[#232734] font-header text-base font-bold uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors relative z-10">&larr; Standings</button>
+            </div>
+
+            <div id="driver-stats-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-14 relative z-10"></div>
+
+            <h2 class="section-heading font-header text-2xl md:text-3xl font-black uppercase italic tracking-wide mb-6">Points per Weekend</h2>
+            <div class="bg-[#10141C] border border-[#232734] corner-cut p-6 mb-14">
+                <div id="driver-points-chart" class="h-44 flex items-stretch gap-2"></div>
+            </div>
+
+            <h2 class="section-heading font-header text-2xl md:text-3xl font-black uppercase italic tracking-wide mb-6">Teammate Head-to-Head</h2>
+            <div id="driver-h2h" class="bg-[#10141C] border border-[#232734] corner-cut p-6 mb-14"></div>
+
+            <h2 class="section-heading font-header text-2xl md:text-3xl font-black uppercase italic tracking-wide mb-6">Season Results</h2>
+            <div class="bg-[#10141C] border border-[#232734] corner-cut overflow-x-auto">
+                <table class="w-full min-w-[600px]">
+                    <thead>
+                        <tr class="bg-[#151821] text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
+                            <th class="text-left py-4 px-5 w-20">Round</th>
+                            <th class="text-left py-4 px-5">Grand Prix</th>
+                            <th class="text-center py-4 px-5">Quali</th>
+                            <th class="text-center py-4 px-5">Sprint</th>
+                            <th class="text-center py-4 px-5">Feature</th>
+                            <th class="text-right py-4 px-5">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driver-results-body"></tbody>
+                </table>
+            </div>
+        </div>
+
     </main>
 
     <script src="js/app.js"></script>
