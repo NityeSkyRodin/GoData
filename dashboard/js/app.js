@@ -279,20 +279,45 @@ function fetchAllRacesForStats() {
     return allRacesPromise;
 }
 
+// All files are fetched at the same time; Promise.all keeps them in calendar order
 async function loadAllRaces() {
-    const races = [];
-    for (const race of raceIndex) {
+    const races = await Promise.all(raceIndex.map(async race => {
         try {
             const res = await fetch(`./data/races/${race.file}`);
-            if (res.ok) {
-                const data = await res.json();
-                races.push({ track: race.track_name, data, ...race });
-            }
+            if (!res.ok) return null;
+            const data = await res.json();
+            return { track: race.track_name, data, ...race };
         } catch(e) {
             console.error(`Kon ${race.file} niet laden voor stats.`, e);
+            return null;
         }
-    }
-    return races;
+    }));
+    return races.filter(Boolean);
+}
+
+// ---------- Team colors ----------
+
+// Loosely based on the liveries. Change a color here and the whole site follows.
+const TEAM_COLORS = {
+    'PREMA Racing': '#EF4444',
+    'MP Motorsport': '#F97316',
+    'Campos Racing': '#FACC15',
+    'Hitech Pulse-Eight': '#A3E635',
+    'Invicta Racing': '#22C55E',
+    'Rodin Motorsport': '#2DD4BF',
+    'DAMS Lucas Oil': '#3B82F6',
+    'Trident': '#6366F1',
+    'Van Amersfoort Racing': '#EC4899',
+    'ART Grand Prix': '#94A3B8',
+    'AIX Racing': '#F5F5F4'
+};
+
+function teamColor(teamName) {
+    return TEAM_COLORS[teamName] ?? '#0090D0';
+}
+
+function teamStripe(teamName) {
+    return `<span class="inline-block w-1 h-5 mr-3 align-middle shrink-0" style="background: ${teamColor(teamName)}"></span>`;
 }
  
  
@@ -309,6 +334,16 @@ function setupSidebar() {
         button.addEventListener('click', () => loadRace(race));
         raceList.appendChild(button);
     });
+
+    // Clicks are handled by the data-driver listener in initEventListeners
+    const drivers = [...championship].sort((a, b) => a.driver_number - b.driver_number);
+    document.getElementById('driver-list').innerHTML = drivers.map(d => `
+        <button id="nav-driver-${d.driver_number}" data-driver="${d.driver_name}" class="w-full flex items-center gap-3 px-3 py-2.5 slanted bg-[#151821] text-slate-400 hover:text-white hover:bg-[#232734] transition-all">
+            <span class="w-1 h-4 shrink-0" style="background: ${teamColor(d.team_name)}"></span>
+            <span class="font-header font-bold text-slate-600 w-5 text-right">${d.driver_number}</span>
+            <span class="font-bold tracking-wider text-xs uppercase truncate">${d.driver_name}</span>
+        </button>
+    `).join('');
 }
  
 function showView(viewId) {
@@ -455,6 +490,7 @@ async function renderStandings() {
  
         podiumHTML += `
             <div class="relative overflow-hidden corner-cut p-5 min-h-[120px] ${first ? 'bg-[#0090D0]' : 'bg-[#10141C] border border-[#232734]'}">
+                <span class="absolute left-0 top-0 bottom-0 w-1.5" style="background: ${teamColor(item.team_name)}"></span>
                 <div class="flex justify-between items-start gap-3">
                     <span class="font-header text-3xl font-black italic ${first ? 'text-white/50' : 'text-slate-500'}">P${index + 1}</span>
                     <div class="text-right">
@@ -491,12 +527,20 @@ async function renderStandings() {
         tableHTML += `
             <tr class="hover:bg-[#151821] transition-colors border-b border-[#232734]/60 last:border-0">
                 <td class="py-4 px-5 font-header font-black text-xl text-slate-500">${index + 4}</td>
-                <td class="py-4 px-5 font-header font-bold text-lg text-slate-500 ${!isDrivers ? 'hidden' : ''}">${item.driver_number ?? '-'}</td>
-                <td class="py-4 px-5 font-header font-bold text-lg text-white uppercase tracking-wide">${isDrivers
-                    ? `<button data-driver="${item.driver_name}" class="uppercase hover:text-[#0090D0] transition-colors">${item.driver_name}</button>`
-                    : item.team_name}</td>
-                <td class="py-4 px-5 text-xs font-bold uppercase tracking-[0.15em] text-slate-500 ${!isDrivers ? 'hidden' : ''}">${item.team_name}</td>
-                <td class="py-4 px-5 ${!isDrivers ? 'hidden' : ''}">${formGuide}</td>
+                <td class="py-4 px-5 font-header font-bold text-lg text-slate-500 max-md:hidden ${!isDrivers ? 'hidden' : ''}">${item.driver_number ?? '-'}</td>
+                <td class="py-4 px-5 font-header font-bold text-lg text-white uppercase tracking-wide">
+                    <div class="flex items-center">
+                        ${teamStripe(item.team_name)}
+                        <div class="min-w-0">
+                            ${isDrivers
+                                ? `<button data-driver="${item.driver_name}" class="uppercase hover:text-[#0090D0] transition-colors">${item.driver_name}</button>
+                                   <div class="md:hidden text-[10px] font-bold tracking-[0.15em] text-slate-500 truncate">${item.team_name}</div>`
+                                : item.team_name}
+                        </div>
+                    </div>
+                </td>
+                <td class="py-4 px-5 text-xs font-bold uppercase tracking-[0.15em] text-slate-500 max-md:hidden ${!isDrivers ? 'hidden' : ''}">${item.team_name}</td>
+                <td class="py-4 px-5 max-md:hidden ${!isDrivers ? 'hidden' : ''}">${formGuide}</td>
                 <td class="py-4 px-5 text-right">
                     <span class="font-header font-black text-xl text-[#0090D0]">${item.points}</span>
                     <div class="text-[10px] font-bold text-slate-500">-${gap}</div>
@@ -552,8 +596,14 @@ async function drawChampionshipChart() {
     const w = 1000, h = 200;
  
     let paths = '';
-    const colors = ['#0090D0', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'];
- 
+    // Team colors, and a dashed line for the second driver of a team so teammates stay apart
+    const seenTeams = new Set();
+    const lines = top5.map(d => {
+        const dashed = seenTeams.has(d.team_name);
+        seenTeams.add(d.team_name);
+        return { color: teamColor(d.team_name), dash: dashed ? '12 8' : 'none' };
+    });
+
     top5.forEach((d, i) => {
         const ptsArray = history[d.driver_name];
         const stepX = w / rounds;
@@ -565,11 +615,11 @@ async function drawChampionshipChart() {
             pathD += ` L ${x} ${y}`;
         });
  
-        const opacity = i === 0 ? '1' : '0.4';
-        const sw = i === 0 ? '4' : '2';
- 
+        const opacity = i === 0 ? '1' : '0.75';
+        const sw = i === 0 ? '4' : '2.5';
+
         paths += `
-            <path d="${pathD}" fill="none" stroke="${colors[i]}" stroke-width="${sw}" stroke-opacity="${opacity}"
+            <path d="${pathD}" fill="none" stroke="${lines[i].color}" stroke-dasharray="${lines[i].dash}" stroke-width="${sw}" stroke-opacity="${opacity}"
                 class="transition-all hover:stroke-opacity-100 hover:stroke-width-4 cursor-pointer">
                 <title>${d.driver_name}</title>
             </path>
@@ -584,7 +634,9 @@ async function drawChampionshipChart() {
 
     document.getElementById('champ-legend').innerHTML = top5.map((d, i) => `
         <button data-driver="${d.driver_name}" class="flex items-center gap-2 font-header text-sm font-bold uppercase tracking-wider text-slate-400 hover:text-white transition-colors">
-            <span class="w-3 h-3 rounded-full" style="background: ${colors[i]}; opacity: ${i === 0 ? 1 : 0.6}"></span>
+            <svg width="22" height="4" class="overflow-visible">
+                <line x1="0" y1="2" x2="22" y2="2" stroke="${lines[i].color}" stroke-width="4" stroke-dasharray="${lines[i].dash === 'none' ? 'none' : '6 4'}"></line>
+            </svg>
             ${d.driver_name}
             <span class="text-slate-600">${d.points}</span>
         </button>
@@ -706,9 +758,9 @@ function renderSession(results, session) {
             if (qualiRes) {
                 const diff = qualiRes.position - driver.position;
                 if (diff > 0) {
-                    deltaHtml = `<span class="text-[10px] font-bold px-1.5 py-0.5 ml-2 rounded bg-emerald-500/10 text-emerald-400">▲ +${diff}</span>`;
+                    deltaHtml = `<span class="max-md:hidden text-[10px] font-bold px-1.5 py-0.5 ml-2 rounded bg-emerald-500/10 text-emerald-400">▲ +${diff}</span>`;
                 } else if (diff < 0) {
-                    deltaHtml = `<span class="text-[10px] font-bold px-1.5 py-0.5 ml-2 rounded bg-red-500/10 text-red-400">▼ ${diff}</span>`;
+                    deltaHtml = `<span class="max-md:hidden text-[10px] font-bold px-1.5 py-0.5 ml-2 rounded bg-red-500/10 text-red-400">▼ ${diff}</span>`;
                 }
             }
         }
@@ -721,18 +773,24 @@ function renderSession(results, session) {
  
         return `
             <tr class="hover:bg-[#151821] transition-colors border-b border-[#232734]/60 last:border-0">
-                <td class="py-4 px-4 font-header font-black text-xl text-white flex items-center h-full min-h-[60px]">
+                <td class="py-4 px-4 font-header font-black text-xl max-md:text-lg text-white flex items-center h-full min-h-[60px]">
                     P${driver.position} ${deltaHtml}
                 </td>
-                <td class="py-4 px-4 font-header font-bold text-lg text-slate-500">${driver.race_number ?? '-'}</td>
-                <td class="py-4 px-4 font-header font-bold text-lg text-white uppercase tracking-wide">
-                    <button data-driver="${driver.driver_name}" class="uppercase hover:text-[#0090D0] transition-colors">${driver.driver_name}</button>
+                <td class="py-4 px-4 font-header font-bold text-lg text-slate-500 max-md:hidden">${driver.race_number ?? '-'}</td>
+                <td class="py-4 px-4 font-header font-bold text-lg max-md:text-base text-white uppercase tracking-wide">
+                    <div class="flex items-center">
+                        ${teamStripe(driver.team_name)}
+                        <div class="min-w-0">
+                            <button data-driver="${driver.driver_name}" class="uppercase hover:text-[#0090D0] transition-colors">${driver.driver_name}</button>
+                            <div class="md:hidden max-w-[110px] text-[10px] font-bold tracking-[0.15em] text-slate-500 truncate">${driver.team_name ?? ''}</div>
+                        </div>
+                    </div>
                 </td>
-                <td class="py-4 px-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-500">${driver.team_name ?? '-'}</td>
-                <td class="py-4 px-4 text-center font-header font-bold text-lg text-slate-300">${driver.num_laps ?? '-'}</td>
-                <td class="py-4 px-4 font-header font-bold text-base text-slate-400">${bestLapDisplay}</td>
-                <td class="py-4 px-4 font-header font-bold text-base ${interval === 'LEADER' ? 'text-[#0090D0]' : 'text-slate-400'}">${interval}</td>
-                <td class="py-4 px-4 text-center">
+                <td class="py-4 px-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-500 max-md:hidden">${driver.team_name ?? '-'}</td>
+                <td class="py-4 px-4 text-center font-header font-bold text-lg text-slate-300 max-md:hidden">${driver.num_laps ?? '-'}</td>
+                <td class="py-4 px-4 font-header font-bold text-base text-slate-400 max-md:hidden">${bestLapDisplay}</td>
+                <td class="py-4 px-4 font-header font-bold text-base max-md:text-sm ${interval === 'LEADER' ? 'text-[#0090D0]' : 'text-slate-400'}">${interval}</td>
+                <td class="py-4 px-4 text-center max-md:hidden">
                     <span class="inline-flex px-3 py-1 corner-cut text-[10px] font-black uppercase tracking-widest ${finished ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}">
                         ${driver.status ?? '-'}
                     </span>
@@ -804,7 +862,7 @@ async function showDriver(driverName) {
 
     showView('view-driver');
     document.getElementById('sidebar').classList.add('-translate-x-full');
-    updateActiveNav(null);
+    updateActiveNav(`nav-driver-${driver.driver_number}`);
     window.scrollTo(0, 0);
 
     document.getElementById('driver-title').textContent = driver.driver_name;
@@ -898,12 +956,12 @@ function renderDriverPositionChart(races, driver) {
             <span class="absolute left-0 top-0 text-[10px] font-bold uppercase tracking-wider text-slate-600">P1</span>
             <span class="absolute left-0 bottom-0 text-[10px] font-bold uppercase tracking-wider text-slate-600">P${fieldSize}</span>
             <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <polyline points="${line}" fill="none" stroke="#0090D0" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+                <polyline points="${line}" fill="none" stroke="${teamColor(driver.team_name)}" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
             </svg>
             ${positions.map((pos, i) => `
                 <div class="absolute flex flex-col items-center -translate-x-1/2 -translate-y-full" style="left: ${x(i)}%; top: ${y(pos)}%" title="${races[i].track_name}: P${pos}">
                     <span class="font-header font-bold text-sm ${pos <= 3 ? 'text-white' : 'text-slate-400'} mb-1">P${pos}</span>
-                    <span class="w-3 h-3 rounded-full bg-[#0090D0] border-2 border-[#10141C] translate-y-1/2"></span>
+                    <span class="w-3 h-3 rounded-full border-2 border-[#10141C] translate-y-1/2" style="background: ${teamColor(driver.team_name)}"></span>
                 </div>
             `).join('')}
         </div>
@@ -923,7 +981,7 @@ function renderDriverPointsChart(races, driver) {
         <div class="flex-1 min-w-0 flex flex-col items-center gap-2" title="${race.track_name}: ${points[i]} pts">
             <span class="font-header font-bold text-sm ${points[i] > 0 ? 'text-white' : 'text-slate-600'}">${points[i]}</span>
             <div class="flex-1 w-full flex items-end">
-                <div class="w-full corner-cut ${points[i] > 0 ? 'bg-[#0090D0]' : 'bg-[#232734]'}" style="height: ${Math.max(points[i] / max * 100, 3)}%"></div>
+                <div class="w-full corner-cut" style="height: ${Math.max(points[i] / max * 100, 3)}%; background: ${points[i] > 0 ? teamColor(driver.team_name) : '#232734'}"></div>
             </div>
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate w-full text-center">${race.track_name.slice(0, 3)}</span>
         </div>
@@ -972,7 +1030,7 @@ function renderHeadToHead(races, driver) {
                             <span class="font-header font-black text-lg ${row.behind > row.ahead ? 'text-white' : 'text-slate-500'}">${row.behind}</span>
                         </div>
                         <div class="flex h-2 bg-[#232734]">
-                            <div class="bg-[#0090D0]" style="width: ${share}%"></div>
+                            <div style="width: ${share}%; background: ${teamColor(driver.team_name)}"></div>
                         </div>
                     </div>
                 `;
@@ -985,8 +1043,8 @@ function renderDriverResults(races, driver) {
     const body = document.getElementById('driver-results-body');
     body.innerHTML = races.map((race, i) => `
         <tr data-race-file="${race.file}" class="driver-result-row cursor-pointer hover:bg-[#151821] transition-colors border-b border-[#232734]/60 last:border-0">
-            <td class="py-4 px-5 font-header font-black text-lg text-slate-500">${twoDigits(i + 1)}</td>
-            <td class="py-4 px-5 font-header font-bold text-lg text-white uppercase tracking-wide">${race.track_name}</td>
+            <td class="py-4 px-5 font-header font-black text-lg text-slate-500 max-md:hidden">${twoDigits(i + 1)}</td>
+            <td class="py-4 px-5 font-header font-bold text-lg text-white uppercase tracking-wide"><span class="md:hidden">${race.track_name.slice(0, 3)}</span><span class="max-md:hidden">${race.track_name}</span></td>
             ${['qualifying', 'sprint', 'race'].map(session => `
                 <td class="py-4 px-5 text-center font-header text-sm">
                     ${race.data[session]?.length ? positionBadge(findResult(race, session, driver.driver_name), 'w-8 h-8') : '<span class="text-slate-700">·</span>'}

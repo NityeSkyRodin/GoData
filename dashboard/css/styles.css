@@ -81,3 +81,12 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--f2-blue);
 }
+/* Phones: tighter table cells so the remaining columns fit without scrolling.
+   [class] is there to outrank the px-* utility classes on the cells. */
+@media (max-width: 767px) {
+    main table th[class],
+    main table td[class] {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}

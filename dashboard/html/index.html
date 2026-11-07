@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F2 Telemetry</title>
+    <meta name="description" content="Championship standings and race results of our private F2 league.">
+    <meta name="theme-color" content="#0B0E14">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+
+    <!-- Preview when the link is shared (WhatsApp, Discord, ...). Crawlers need absolute URLs. -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="F2.TM · Private League">
+    <meta property="og:description" content="Championship standings and race results, season 2026.">
+    <meta property="og:url" content="https://nityeskyrodin.github.io/GoData/">
+    <meta property="og:image" content="https://nityeskyrodin.github.io/GoData/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;900&family=Titillium+Web:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
@@ -41,6 +55,11 @@
                 <div class="text-[10px] uppercase tracking-widest text-slate-600 font-bold px-3 mb-2">Race Weekends</div>
                 <div id="race-list" class="space-y-1"></div>
             </div>
+
+            <div>
+                <div class="text-[10px] uppercase tracking-widest text-slate-600 font-bold px-3 mb-2">Drivers</div>
+                <div id="driver-list" class="space-y-1"></div>
+            </div>
         </nav>
     </aside>
 
@@ -70,15 +89,15 @@
             <div id="standings-podium" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 relative z-10"></div>
 
             <div id="standings-table-wrapper" class="bg-[#10141C] border border-[#232734] corner-cut overflow-x-auto mb-14">
-                <table class="w-full min-w-[650px]">
+                <table class="w-full md:min-w-[650px]">
                     <thead>
                         <tr class="bg-[#151821] text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
                             <th class="text-left py-4 px-5 w-16">Pos</th>
-                            <th id="standings-number-header" class="text-left py-4 px-5 w-16">#</th>
+                            <th id="standings-number-header" class="text-left py-4 px-5 w-16 max-md:hidden">#</th>
                             <th id="standings-name-header" class="text-left py-4 px-5">Driver</th>
-                            <th id="standings-team-header" class="text-left py-4 px-5">Team</th>
-                            <th id="standings-form-header" class="text-left py-4 px-5 w-48">Form (Last 5)</th>
-                            <th class="text-right py-4 px-5">Points</th>
+                            <th id="standings-team-header" class="text-left py-4 px-5 max-md:hidden">Team</th>
+                            <th id="standings-form-header" class="text-left py-4 px-5 w-48 max-md:hidden">Form (Last 5)</th>
+                            <th class="text-right py-4 px-5"><span class="md:hidden">Pts</span><span class="max-md:hidden">Points</span></th>
                         </tr>
                     </thead>
                     <tbody id="standings-table-body"></tbody>
@@ -109,18 +128,18 @@
             <h2 id="session-title" class="section-heading font-header text-2xl md:text-3xl font-black uppercase italic tracking-wide mb-6 relative z-10"></h2>
             
             <div id="race-table-wrapper" class="bg-[#10141C] border border-[#232734] corner-cut overflow-x-auto relative z-10 shadow-2xl">
-                <table class="w-full min-w-[850px]">
+                <table class="w-full md:min-w-[850px]">
                     <thead>
                         <tr class="bg-[#151821] text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
                             <th class="text-left py-4 px-4 w-12">Pos</th>
-                            <th class="text-left py-4 px-4 w-12">#</th>
+                            <th class="text-left py-4 px-4 w-12 max-md:hidden">#</th>
                             <th class="text-left py-4 px-4">Driver</th>
-                            <th class="text-left py-4 px-4">Team</th>
-                            <th class="text-center py-4 px-4">Laps</th>
-                            <th class="text-left py-4 px-4">Best Lap</th>
-                            <th class="text-left py-4 px-4">Interval</th>
-                            <th class="text-center py-4 px-4">Status</th>
-                            <th class="text-right py-4 px-4">Points</th>
+                            <th class="text-left py-4 px-4 max-md:hidden">Team</th>
+                            <th class="text-center py-4 px-4 max-md:hidden">Laps</th>
+                            <th class="text-left py-4 px-4 max-md:hidden">Best Lap</th>
+                            <th class="text-left py-4 px-4"><span class="md:hidden">Gap</span><span class="max-md:hidden">Interval</span></th>
+                            <th class="text-center py-4 px-4 max-md:hidden">Status</th>
+                            <th class="text-right py-4 px-4"><span class="md:hidden">Pts</span><span class="max-md:hidden">Points</span></th>
                         </tr>
                     </thead>
                     <tbody id="race-table-body"></tbody>
@@ -154,15 +173,15 @@
 
             <h2 class="section-heading font-header text-2xl md:text-3xl font-black uppercase italic tracking-wide mb-6">Season Results</h2>
             <div class="bg-[#10141C] border border-[#232734] corner-cut overflow-x-auto">
-                <table class="w-full min-w-[600px]">
+                <table class="w-full md:min-w-[600px]">
                     <thead>
                         <tr class="bg-[#151821] text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
-                            <th class="text-left py-4 px-5 w-20">Round</th>
+                            <th class="text-left py-4 px-5 w-20 max-md:hidden">Round</th>
                             <th class="text-left py-4 px-5">Grand Prix</th>
-                            <th class="text-center py-4 px-5">Quali</th>
-                            <th class="text-center py-4 px-5">Sprint</th>
-                            <th class="text-center py-4 px-5">Feature</th>
-                            <th class="text-right py-4 px-5">Points</th>
+                            <th class="text-center py-4 px-5"><span class="md:hidden">Q</span><span class="max-md:hidden">Quali</span></th>
+                            <th class="text-center py-4 px-5"><span class="md:hidden">S</span><span class="max-md:hidden">Sprint</span></th>
+                            <th class="text-center py-4 px-5"><span class="md:hidden">F</span><span class="max-md:hidden">Feature</span></th>
+                            <th class="text-right py-4 px-5"><span class="md:hidden">Pts</span><span class="max-md:hidden">Points</span></th>
                         </tr>
                     </thead>
                     <tbody id="driver-results-body"></tbody>
