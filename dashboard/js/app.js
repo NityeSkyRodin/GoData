@@ -297,23 +297,28 @@ async function loadAllRaces() {
 
 // ---------- Team colors ----------
 
-// Loosely based on the liveries. Change a color here and the whole site follows.
+// Main livery color of each team. Change a color here and the whole site follows.
 const TEAM_COLORS = {
-    'PREMA Racing': '#EF4444',
-    'MP Motorsport': '#F97316',
-    'Campos Racing': '#FACC15',
-    'Hitech Pulse-Eight': '#A3E635',
-    'Invicta Racing': '#22C55E',
-    'Rodin Motorsport': '#2DD4BF',
-    'DAMS Lucas Oil': '#3B82F6',
-    'Trident': '#6366F1',
-    'Van Amersfoort Racing': '#EC4899',
-    'ART Grand Prix': '#94A3B8',
-    'AIX Racing': '#F5F5F4'
+    'PREMA Racing': '#E10600',          // red
+    'Invicta Racing': '#FFD100',        // yellow
+    'Van Amersfoort Racing': '#FF6A00', // black/orange, the orange shows on a dark page
+    'MP Motorsport': '#FDBA74',         // orange as well, lighter so it differs from VAR
+    'Trident': '#2563EB',               // blue
+    'DAMS Lucas Oil': '#38BDF8',        // light blue
+    'ART Grand Prix': '#E5E7EB',        // black/white, the white shows on a dark page
+    'Hitech Pulse-Eight': '#9CA3AF',    // silver
+    'Rodin Motorsport': '#2DD4BF',      // teal
+    'Campos Racing': '#C0502E',         // red/orange/brown, darker than VAR and PREMA
+    'AIX Racing': '#22C55E'             // green
 };
 
 function teamColor(teamName) {
     return TEAM_COLORS[teamName] ?? '#0090D0';
+}
+
+// Card background that fades from the team color into the card color; P1 a bit stronger
+function podiumBackground(teamName, index) {
+    return `linear-gradient(135deg, ${teamColor(teamName)}${index === 0 ? '55' : '30'}, #10141C 65%)`;
 }
 
 function teamStripe(teamName) {
@@ -547,21 +552,23 @@ function renderDriverStandings(races) {
 
     document.getElementById('standings-podium').innerHTML = championship.slice(0, 3).map((item, index) => {
         const gap = leaderPts - item.points;
-        const first = index === 0;
         return `
-            <div class="relative overflow-hidden corner-cut p-5 min-h-[120px] ${first ? 'bg-[#0090D0]' : 'bg-[#10141C] border border-[#232734]'}">
+            <div class="relative overflow-hidden corner-cut p-5 min-h-[120px] border border-[#232734]" style="background: ${podiumBackground(item.team_name, index)}">
                 <span class="absolute left-0 top-0 bottom-0 w-1.5" style="background: ${teamColor(item.team_name)}"></span>
                 <div class="flex justify-between items-start gap-3">
-                    <span class="font-header text-3xl font-black italic ${first ? 'text-white/50' : 'text-slate-500'}">P${index + 1}</span>
+                    <span class="font-header text-3xl font-black italic text-white/50">P${index + 1}</span>
                     <div class="text-right">
                         <div class="font-header text-2xl font-black text-white whitespace-nowrap">${item.points} PTS</div>
-                        <div class="text-[10px] font-bold ${first ? 'text-white/70' : 'text-slate-500'}">${gap === 0 ? '' : `(-${gap} PTS)`}</div>
+                        <div class="text-[10px] font-bold text-slate-400">${gap === 0 ? '' : `(-${gap} PTS)`}</div>
                     </div>
                 </div>
                 <button data-driver="${item.driver_name}" class="relative z-10 block max-w-full font-header text-2xl font-black uppercase text-white mt-1 truncate hover:underline">${item.driver_name}</button>
-                <div class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] mt-1 truncate ${first ? 'text-white/80' : 'text-[#0090D0]'}">${item.team_name}</div>
-                <div class="mt-4">${formGuide(races, item.driver_name)}</div>
-                <div class="watermark ${first ? 'watermark-on-blue' : ''}">${item.driver_number}</div>
+                <div class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] mt-1 truncate" style="color: ${teamColor(item.team_name)}">${item.team_name}</div>
+                <div class="relative z-10 mt-4 flex items-end justify-between gap-3">
+                    ${formGuide(races, item.driver_name)}
+                    ${pointsSource(getSessionPoints(races, [item.driver_name]), { align: 'right' })}
+                </div>
+                <div class="watermark" style="color: ${teamColor(item.team_name)}; opacity: 0.15">${item.driver_number}</div>
             </div>
         `;
     }).join('');
@@ -606,6 +613,16 @@ const SESSIONS = [
     { key: 'race', label: 'Feature', short: 'F', color: '#0090D0' }
 ];
 
+// Season points per session type for one or more drivers: { qualifying, sprint, race }
+function getSessionPoints(races, driverNames) {
+    const points = {};
+    SESSIONS.forEach(({ key }) => {
+        points[key] = races.reduce((total, race) =>
+            total + driverNames.reduce((s, name) => s + (findResult(race, key, name)?.points || 0), 0), 0);
+    });
+    return points;
+}
+
 // Everything the teams view shows, summed over the drivers of each team.
 // Drivers are in championship order, so drivers[0] and [1] are the regular pair.
 function getTeamStats(races) {
@@ -614,11 +631,7 @@ function getTeamStats(races) {
         const driverStats = drivers.map(d => getDriverStats(races, d.driver_name));
         const sum = key => driverStats.reduce((total, stats) => total + stats[key], 0);
 
-        const sessionPoints = {};
-        SESSIONS.forEach(({ key }) => {
-            sessionPoints[key] = races.reduce((total, race) =>
-                total + drivers.reduce((s, d) => s + (findResult(race, key, d.driver_name)?.points || 0), 0), 0);
-        });
+        const sessionPoints = getSessionPoints(races, drivers.map(d => d.driver_name));
 
         let battle = null;
         if (drivers.length >= 2) {
@@ -658,16 +671,16 @@ function driverSplit(team) {
 }
 
 // Bar that shows where the points came from: qualifying, sprint or feature
-function pointsSource(team, { align = 'left' } = {}) {
-    const total = SESSIONS.reduce((s, { key }) => s + team.sessionPoints[key], 0) || 1;
-    const title = SESSIONS.map(s => `${s.label} ${team.sessionPoints[s.key]}`).join(' · ');
+function pointsSource(sessionPoints, { align = 'left' } = {}) {
+    const total = SESSIONS.reduce((s, { key }) => s + sessionPoints[key], 0) || 1;
+    const title = SESSIONS.map(s => `${s.label} ${sessionPoints[s.key]}`).join(' · ');
     return `
         <div title="${title}" class="${align === 'right' ? 'ml-auto' : ''} w-28">
             <div class="flex h-1.5 bg-[#232734] gap-px">
-                ${SESSIONS.map(s => `<div style="width: ${team.sessionPoints[s.key] / total * 100}%; background: ${s.color}"></div>`).join('')}
+                ${SESSIONS.map(s => `<div style="width: ${sessionPoints[s.key] / total * 100}%; background: ${s.color}"></div>`).join('')}
             </div>
             <div class="flex ${align === 'right' ? 'justify-end' : ''} gap-2 mt-1 text-[10px] font-bold text-slate-500">
-                ${SESSIONS.map(s => `<span><span style="color: ${s.color}">${s.short}</span> ${team.sessionPoints[s.key]}</span>`).join('')}
+                ${SESSIONS.map(s => `<span><span style="color: ${s.color}">${s.short}</span> ${sessionPoints[s.key]}</span>`).join('')}
             </div>
         </div>
     `;
@@ -689,7 +702,7 @@ function renderTeamStandings(races) {
         const color = teamColor(team.team_name);
         const gap = leaderPts - team.points;
         return `
-            <div class="relative overflow-hidden corner-cut p-5 min-h-[120px] border border-[#232734]" style="background: linear-gradient(135deg, ${color}${index === 0 ? '55' : '30'}, #10141C 65%)">
+            <div class="relative overflow-hidden corner-cut p-5 min-h-[120px] border border-[#232734]" style="background: ${podiumBackground(team.team_name, index)}">
                 <span class="absolute left-0 top-0 bottom-0 w-1.5" style="background: ${color}"></span>
                 <div class="flex justify-between items-start gap-3">
                     <span class="font-header text-3xl font-black italic text-white/50">P${index + 1}</span>
@@ -702,7 +715,7 @@ function renderTeamStandings(races) {
                 <div class="relative z-10 mt-3">${driverSplit(team)}</div>
                 <div class="relative z-10 mt-4 flex items-end justify-between gap-3">
                     ${teamFormGuide(races, team)}
-                    ${pointsSource(team, { align: 'right' })}
+                    ${pointsSource(team.sessionPoints, { align: 'right' })}
                 </div>
                 <div class="watermark" style="color: ${color}; opacity: 0.15">${index + 1}</div>
             </div>
@@ -747,7 +760,7 @@ function renderTeamStandings(races) {
                     <span class="font-header font-black text-xl text-[#0090D0]">${team.points}</span>
                     <div class="text-[10px] font-bold text-slate-500 whitespace-nowrap">-${leaderPts - team.points} leader</div>
                     <div class="text-[10px] font-bold text-slate-500 whitespace-nowrap">-${ahead.points - team.points} P${index}</div>
-                    <div class="mt-2 max-md:hidden">${pointsSource(team, { align: 'right' })}</div>
+                    <div class="mt-2 max-md:hidden">${pointsSource(team.sessionPoints, { align: 'right' })}</div>
                 </td>
             </tr>
         `;
