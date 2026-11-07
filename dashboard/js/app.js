@@ -407,14 +407,33 @@ function positionBadge(result, size = 'w-6 h-6') {
     return `<span class="${base} bg-[#151821] text-slate-400 border border-[#232734]">${pos}</span>`;
 }
 
-// Build form guide (last 5 races)
-async function getFormGuide(driverName) {
-    const races = await fetchAllRacesForStats();
+// Build form guide (last 5 feature races)
+function formGuide(races, driverName) {
     const formHTML = races.slice(-5)
         .map(race => positionBadge(findResult(race, 'race', driverName)))
         .join('');
 
     return `<div class="flex items-center gap-1 font-header text-[11px]">${formHTML}</div>`;
+}
+
+// Same look as positionBadge, but for the points a team scored in one weekend
+function pointsBadge(points, trackName) {
+    const base = 'w-7 h-6 inline-flex items-center justify-center corner-cut';
+    const title = `title="${trackName}: ${points} pts"`;
+    if (points >= 30) {
+        return `<span ${title} class="${base} bg-[#0090D0] text-white font-black">${points}</span>`;
+    } else if (points >= 15) {
+        return `<span ${title} class="${base} bg-[#0090D0]/30 text-white border border-[#0090D0]/50 font-bold">${points}</span>`;
+    } else if (points > 0) {
+        return `<span ${title} class="${base} bg-[#232734] text-white border border-[#232734]">${points}</span>`;
+    }
+    return `<span ${title} class="${base} bg-[#151821] text-slate-600 border border-[#232734]">0</span>`;
+}
+
+function teamFormGuide(races, team) {
+    const recent = races.slice(-5);
+    const points = team.weekendPoints.slice(-5);
+    return `<div class="flex items-center gap-1 font-header text-[11px]">${points.map((p, i) => pointsBadge(p, recent[i].track_name)).join('')}</div>`;
 }
 
 // ---------- Result helpers ----------
@@ -445,112 +464,296 @@ function renderChampionship() {
     renderStandings();
     renderCalendar();
 }
- 
-function renderStats() {
-    const leader = championship[0];
+
+async function renderStats() {
     const latest = raceIndex[raceIndex.length - 1];
+    const races = await fetchAllRacesForStats();
+    let cards;
+
+    if (standingsMode === 'drivers') {
+        const leader = championship[0];
+        cards = [
+            statCard('Drivers', championship.length, { index: 1 }),
+            statCard('Leader Pts', leader?.points ?? 0, { sub: leader?.driver_name, index: 2 })
+        ];
+    } else {
+        const teams = getTeamStats(races);
+        const mostWins = [...teams].sort((a, b) => b.wins - a.wins)[0];
+        cards = [
+            statCard('Teams', teams.length, { index: 1 }),
+            statCard('Leader Pts', teams[0]?.points ?? 0, { sub: teams[0]?.team_name, index: 2 }),
+            statCard('Most Wins', mostWins?.wins ?? 0, { sub: mostWins?.team_name, index: 3 })
+        ];
+    }
+
     document.getElementById('stats-cards').innerHTML = [
         statCard('Races', raceIndex.length, { accent: true, index: 0 }),
-        statCard('Drivers', championship.length, { index: 1 }),
-        statCard('Leader Pts', leader?.points ?? 0, { sub: leader?.driver_name, index: 2 }),
-        statCard('Latest GP', latest?.track_name ?? '--', { index: 3 })
+        ...cards,
+        standingsMode === 'drivers' ? statCard('Latest GP', latest?.track_name ?? '--', { index: 3 }) : ''
     ].join('');
 }
- 
+
 function setStandingsMode(mode) {
     standingsMode = mode;
     const isDrivers = mode === 'drivers';
- 
+
     const btnDrivers = document.getElementById('toggle-drivers');
     btnDrivers.classList.toggle('bg-[#0090D0]', isDrivers);
     btnDrivers.classList.toggle('text-white', isDrivers);
     btnDrivers.classList.toggle('text-slate-500', !isDrivers);
- 
+
     const btnTeams = document.getElementById('toggle-teams');
     btnTeams.classList.toggle('bg-[#0090D0]', !isDrivers);
     btnTeams.classList.toggle('text-white', !isDrivers);
     btnTeams.classList.toggle('text-slate-500', isDrivers);
- 
+
+    // Cards, chart and standings all follow the toggle
+    renderStats();
     renderStandings();
+    drawChampionshipChart();
+    document.getElementById('team-position-section').classList.toggle('hidden', isDrivers);
+    if (!isDrivers) drawTeamPositionChart();
 }
- 
+
 async function renderStandings() {
-    const isDrivers = standingsMode === 'drivers';
-    const data = isDrivers ? championship : teamChampionship;
-    const leaderPts = data[0]?.points ?? 0;
- 
-    // Podium cards (Top 3)
-    let podiumHTML = '';
-    for (let index = 0; index < Math.min(3, data.length); index++) {
-        const item = data[index];
+    const races = await fetchAllRacesForStats();
+    if (standingsMode === 'drivers') {
+        renderDriverStandings(races);
+    } else {
+        renderTeamStandings(races);
+    }
+}
+
+// columns: [{ label, short, cls }], short is the label on phones
+function setStandingsHead(columns) {
+    document.getElementById('standings-table-head').innerHTML = `
+        <tr class="bg-[#151821] text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
+            ${columns.map(c => `
+                <th class="py-4 px-5 ${c.cls}">${c.short
+                    ? `<span class="md:hidden">${c.short}</span><span class="max-md:hidden">${c.label}</span>`
+                    : c.label}</th>
+            `).join('')}
+        </tr>
+    `;
+}
+
+function setStandingsRows(rows) {
+    document.getElementById('standings-table-wrapper').classList.toggle('hidden', rows.length === 0);
+    document.getElementById('standings-table-body').innerHTML = rows.join('');
+}
+
+function renderDriverStandings(races) {
+    const leaderPts = championship[0]?.points ?? 0;
+
+    document.getElementById('standings-podium').innerHTML = championship.slice(0, 3).map((item, index) => {
         const gap = leaderPts - item.points;
-        const gapStr = gap === 0 ? '' : `(-${gap} PTS)`;
         const first = index === 0;
-        const formGuide = isDrivers ? await getFormGuide(item.driver_name) : '';
- 
-        podiumHTML += `
+        return `
             <div class="relative overflow-hidden corner-cut p-5 min-h-[120px] ${first ? 'bg-[#0090D0]' : 'bg-[#10141C] border border-[#232734]'}">
                 <span class="absolute left-0 top-0 bottom-0 w-1.5" style="background: ${teamColor(item.team_name)}"></span>
                 <div class="flex justify-between items-start gap-3">
                     <span class="font-header text-3xl font-black italic ${first ? 'text-white/50' : 'text-slate-500'}">P${index + 1}</span>
                     <div class="text-right">
                         <div class="font-header text-2xl font-black text-white whitespace-nowrap">${item.points} PTS</div>
-                        <div class="text-[10px] font-bold ${first ? 'text-white/70' : 'text-slate-500'}">${gapStr}</div>
+                        <div class="text-[10px] font-bold ${first ? 'text-white/70' : 'text-slate-500'}">${gap === 0 ? '' : `(-${gap} PTS)`}</div>
                     </div>
                 </div>
-                ${isDrivers
-                    ? `<button data-driver="${item.driver_name}" class="relative z-10 block max-w-full font-header text-2xl font-black uppercase text-white mt-1 truncate hover:underline">${item.driver_name}</button>`
-                    : `<div class="relative z-10 font-header text-2xl font-black uppercase text-white mt-1 truncate">${item.team_name}</div>`}
-                ${isDrivers ? `<div class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] mt-1 truncate ${first ? 'text-white/80' : 'text-[#0090D0]'}">${item.team_name}</div>` : ''}
-                <div class="mt-4">${formGuide}</div>
-                <div class="watermark ${first ? 'watermark-on-blue' : ''}">${isDrivers ? item.driver_number : index + 1}</div>
+                <button data-driver="${item.driver_name}" class="relative z-10 block max-w-full font-header text-2xl font-black uppercase text-white mt-1 truncate hover:underline">${item.driver_name}</button>
+                <div class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] mt-1 truncate ${first ? 'text-white/80' : 'text-[#0090D0]'}">${item.team_name}</div>
+                <div class="mt-4">${formGuide(races, item.driver_name)}</div>
+                <div class="watermark ${first ? 'watermark-on-blue' : ''}">${item.driver_number}</div>
             </div>
         `;
-    }
-    document.getElementById('standings-podium').innerHTML = podiumHTML;
- 
-    // Table headers
-    document.getElementById('standings-name-header').textContent = isDrivers ? 'Driver' : 'Team';
-    document.getElementById('standings-number-header').classList.toggle('hidden', !isDrivers);
-    document.getElementById('standings-team-header').classList.toggle('hidden', !isDrivers);
-    document.getElementById('standings-form-header').classList.toggle('hidden', !isDrivers);
- 
-    // Table rows (P4+)
-    const rest = data.slice(3);
-    document.getElementById('standings-table-wrapper').classList.toggle('hidden', rest.length === 0);
- 
-    let tableHTML = '';
-    for (let index = 0; index < rest.length; index++) {
-        const item = rest[index];
-        const gap = leaderPts - item.points;
-        const formGuide = isDrivers ? await getFormGuide(item.driver_name) : '';
-        tableHTML += `
+    }).join('');
+
+    setStandingsHead([
+        { label: 'Pos', cls: 'text-left w-16' },
+        { label: '#', cls: 'text-left w-16 max-md:hidden' },
+        { label: 'Driver', cls: 'text-left' },
+        { label: 'Team', cls: 'text-left max-md:hidden' },
+        { label: 'Form (Last 5)', cls: 'text-left w-48 max-md:hidden' },
+        { label: 'Points', short: 'Pts', cls: 'text-right' }
+    ]);
+
+    setStandingsRows(championship.slice(3).map((item, index) => `
+        <tr class="hover:bg-[#151821] transition-colors border-b border-[#232734]/60 last:border-0">
+            <td class="py-4 px-5 font-header font-black text-xl text-slate-500">${index + 4}</td>
+            <td class="py-4 px-5 font-header font-bold text-lg text-slate-500 max-md:hidden">${item.driver_number ?? '-'}</td>
+            <td class="py-4 px-5 font-header font-bold text-lg text-white uppercase tracking-wide">
+                <div class="flex items-center">
+                    ${teamStripe(item.team_name)}
+                    <div class="min-w-0">
+                        <button data-driver="${item.driver_name}" class="uppercase hover:text-[#0090D0] transition-colors">${item.driver_name}</button>
+                        <div class="md:hidden text-[10px] font-bold tracking-[0.15em] text-slate-500 truncate">${item.team_name}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="py-4 px-5 text-xs font-bold uppercase tracking-[0.15em] text-slate-500 max-md:hidden">${item.team_name}</td>
+            <td class="py-4 px-5 max-md:hidden">${formGuide(races, item.driver_name)}</td>
+            <td class="py-4 px-5 text-right">
+                <span class="font-header font-black text-xl text-[#0090D0]">${item.points}</span>
+                <div class="text-[10px] font-bold text-slate-500">-${leaderPts - item.points}</div>
+            </td>
+        </tr>
+    `));
+}
+
+// ---------- Teams ----------
+
+const SESSIONS = [
+    { key: 'qualifying', label: 'Quali', short: 'Q', color: '#475569' },
+    { key: 'sprint', label: 'Sprint', short: 'S', color: '#7DD3FC' },
+    { key: 'race', label: 'Feature', short: 'F', color: '#0090D0' }
+];
+
+// Everything the teams view shows, summed over the drivers of each team.
+// Drivers are in championship order, so drivers[0] and [1] are the regular pair.
+function getTeamStats(races) {
+    return teamChampionship.map(team => {
+        const drivers = championship.filter(d => d.team_name === team.team_name);
+        const driverStats = drivers.map(d => getDriverStats(races, d.driver_name));
+        const sum = key => driverStats.reduce((total, stats) => total + stats[key], 0);
+
+        const sessionPoints = {};
+        SESSIONS.forEach(({ key }) => {
+            sessionPoints[key] = races.reduce((total, race) =>
+                total + drivers.reduce((s, d) => s + (findResult(race, key, d.driver_name)?.points || 0), 0), 0);
+        });
+
+        let battle = null;
+        if (drivers.length >= 2) {
+            const sprint = countAhead(races, 'sprint', drivers[0].driver_name, drivers[1].driver_name);
+            const feature = countAhead(races, 'race', drivers[0].driver_name, drivers[1].driver_name);
+            battle = { ahead: sprint.ahead + feature.ahead, behind: sprint.behind + feature.behind };
+        }
+
+        return {
+            ...team,
+            drivers,
+            wins: sum('wins'),
+            podiums: sum('podiums'),
+            poles: sum('poles'),
+            dnfs: sum('dnfs'),
+            sessionPoints,
+            battle,
+            weekendPoints: races.map(race => drivers.reduce((s, d) => s + weekendPoints(race, d.driver_name), 0))
+        };
+    });
+}
+
+// Bar that shows how the team points are split over its drivers
+function driverSplit(team) {
+    const color = teamColor(team.team_name);
+    const total = team.drivers.reduce((s, d) => s + d.points, 0) || 1;
+    return `
+        <div class="flex h-1.5 bg-[#232734] mb-2 max-w-xs gap-px">
+            ${team.drivers.map((d, i) => `<div style="width: ${d.points / total * 100}%; background: ${color}; opacity: ${i === 0 ? 1 : 0.4}"></div>`).join('')}
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold uppercase tracking-wider">
+            ${team.drivers.map((d, i) => `
+                <button data-driver="${d.driver_name}" class="${i === 0 ? 'text-white' : 'text-slate-400'} hover:underline">${d.driver_name} <span class="text-slate-500">${d.points}</span></button>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Bar that shows where the points came from: qualifying, sprint or feature
+function pointsSource(team, { align = 'left' } = {}) {
+    const total = SESSIONS.reduce((s, { key }) => s + team.sessionPoints[key], 0) || 1;
+    const title = SESSIONS.map(s => `${s.label} ${team.sessionPoints[s.key]}`).join(' · ');
+    return `
+        <div title="${title}" class="${align === 'right' ? 'ml-auto' : ''} w-28">
+            <div class="flex h-1.5 bg-[#232734] gap-px">
+                ${SESSIONS.map(s => `<div style="width: ${team.sessionPoints[s.key] / total * 100}%; background: ${s.color}"></div>`).join('')}
+            </div>
+            <div class="flex ${align === 'right' ? 'justify-end' : ''} gap-2 mt-1 text-[10px] font-bold text-slate-500">
+                ${SESSIONS.map(s => `<span><span style="color: ${s.color}">${s.short}</span> ${team.sessionPoints[s.key]}</span>`).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function battleScore(team) {
+    if (!team.battle) return '<span class="text-slate-600">-</span>';
+    const { ahead, behind } = team.battle;
+    return `
+        <span class="${ahead >= behind ? 'text-white' : 'text-slate-500'}">${ahead}</span><span class="text-slate-600 mx-1">–</span><span class="${behind > ahead ? 'text-white' : 'text-slate-500'}">${behind}</span>
+    `;
+}
+
+function renderTeamStandings(races) {
+    const teams = getTeamStats(races);
+    const leaderPts = teams[0]?.points ?? 0;
+
+    document.getElementById('standings-podium').innerHTML = teams.slice(0, 3).map((team, index) => {
+        const color = teamColor(team.team_name);
+        const gap = leaderPts - team.points;
+        return `
+            <div class="relative overflow-hidden corner-cut p-5 min-h-[120px] border border-[#232734]" style="background: linear-gradient(135deg, ${color}${index === 0 ? '55' : '30'}, #10141C 65%)">
+                <span class="absolute left-0 top-0 bottom-0 w-1.5" style="background: ${color}"></span>
+                <div class="flex justify-between items-start gap-3">
+                    <span class="font-header text-3xl font-black italic text-white/50">P${index + 1}</span>
+                    <div class="text-right">
+                        <div class="font-header text-2xl font-black text-white whitespace-nowrap">${team.points} PTS</div>
+                        <div class="text-[10px] font-bold text-slate-400">${gap === 0 ? '' : `(-${gap} PTS)`}</div>
+                    </div>
+                </div>
+                <div class="relative z-10 font-header text-2xl font-black uppercase text-white mt-1 truncate">${team.team_name}</div>
+                <div class="relative z-10 mt-3">${driverSplit(team)}</div>
+                <div class="relative z-10 mt-4 flex items-end justify-between gap-3">
+                    ${teamFormGuide(races, team)}
+                    ${pointsSource(team, { align: 'right' })}
+                </div>
+                <div class="watermark" style="color: ${color}; opacity: 0.15">${index + 1}</div>
+            </div>
+        `;
+    }).join('');
+
+    setStandingsHead([
+        { label: 'Pos', cls: 'text-left w-16' },
+        { label: 'Team', cls: 'text-left' },
+        { label: 'Form (Last 5)', cls: 'text-left max-md:hidden' },
+        { label: 'Teammates', cls: 'text-center max-md:hidden' },
+        { label: 'Wins', cls: 'text-center max-md:hidden' },
+        { label: 'Podiums', cls: 'text-center max-md:hidden' },
+        { label: 'Poles', cls: 'text-center max-md:hidden' },
+        { label: 'DNFs', cls: 'text-center max-md:hidden' },
+        { label: 'Points', short: 'Pts', cls: 'text-right' }
+    ]);
+
+    const number = 'py-4 px-5 text-center font-header font-bold text-lg max-md:hidden';
+    setStandingsRows(teams.slice(3).map((team, i) => {
+        const index = i + 3;
+        const ahead = teams[index - 1];
+        return `
             <tr class="hover:bg-[#151821] transition-colors border-b border-[#232734]/60 last:border-0">
-                <td class="py-4 px-5 font-header font-black text-xl text-slate-500">${index + 4}</td>
-                <td class="py-4 px-5 font-header font-bold text-lg text-slate-500 max-md:hidden ${!isDrivers ? 'hidden' : ''}">${item.driver_number ?? '-'}</td>
-                <td class="py-4 px-5 font-header font-bold text-lg text-white uppercase tracking-wide">
-                    <div class="flex items-center">
-                        ${teamStripe(item.team_name)}
+                <td class="py-4 px-5 font-header font-black text-xl text-slate-500 align-top">${index + 1}</td>
+                <td class="py-4 px-5">
+                    <div class="flex items-start">
+                        ${teamStripe(team.team_name)}
                         <div class="min-w-0">
-                            ${isDrivers
-                                ? `<button data-driver="${item.driver_name}" class="uppercase hover:text-[#0090D0] transition-colors">${item.driver_name}</button>
-                                   <div class="md:hidden text-[10px] font-bold tracking-[0.15em] text-slate-500 truncate">${item.team_name}</div>`
-                                : item.team_name}
+                            <div class="font-header font-bold text-lg text-white uppercase tracking-wide mb-1.5">${team.team_name}</div>
+                            ${driverSplit(team)}
                         </div>
                     </div>
                 </td>
-                <td class="py-4 px-5 text-xs font-bold uppercase tracking-[0.15em] text-slate-500 max-md:hidden ${!isDrivers ? 'hidden' : ''}">${item.team_name}</td>
-                <td class="py-4 px-5 max-md:hidden ${!isDrivers ? 'hidden' : ''}">${formGuide}</td>
+                <td class="py-4 px-5 max-md:hidden">${teamFormGuide(races, team)}</td>
+                <td class="${number}" title="Sprint + feature finishes, ${team.drivers[0]?.driver_name ?? ''} vs ${team.drivers[1]?.driver_name ?? ''}">${battleScore(team)}</td>
+                <td class="${number} ${team.wins ? 'text-white' : 'text-slate-600'}">${team.wins}</td>
+                <td class="${number} ${team.podiums ? 'text-white' : 'text-slate-600'}">${team.podiums}</td>
+                <td class="${number} ${team.poles ? 'text-white' : 'text-slate-600'}">${team.poles}</td>
+                <td class="${number} ${team.dnfs ? 'text-red-400' : 'text-slate-600'}">${team.dnfs}</td>
                 <td class="py-4 px-5 text-right">
-                    <span class="font-header font-black text-xl text-[#0090D0]">${item.points}</span>
-                    <div class="text-[10px] font-bold text-slate-500">-${gap}</div>
+                    <span class="font-header font-black text-xl text-[#0090D0]">${team.points}</span>
+                    <div class="text-[10px] font-bold text-slate-500 whitespace-nowrap">-${leaderPts - team.points} leader</div>
+                    <div class="text-[10px] font-bold text-slate-500 whitespace-nowrap">-${ahead.points - team.points} P${index}</div>
+                    <div class="mt-2 max-md:hidden">${pointsSource(team, { align: 'right' })}</div>
                 </td>
             </tr>
         `;
-    }
-    document.getElementById('standings-table-body').innerHTML = tableHTML;
+    }));
 }
- 
+
 function renderCalendar() {
     const container = document.getElementById('race-calendar');
     container.innerHTML = raceIndex.map((race, index) => `
@@ -573,76 +776,134 @@ function renderCalendar() {
     });
 }
  
-async function drawChampionshipChart() {
-    const top5 = championship.slice(0, 5);
-    const rounds = raceIndex.length;
-    if (rounds === 0 || top5.length === 0) return;
- 
-    // Simulate accumulated points history
-    let history = {};
-    top5.forEach(d => { history[d.driver_name] = [0]; });
- 
-    const races = await fetchAllRacesForStats();
- 
-    races.forEach(race => {
-        top5.forEach(d => {
-            // Alle sessies meetellen, zodat de lijn eindigt op de stand in championship.json.
-            const prevPts = history[d.driver_name][history[d.driver_name].length - 1];
-            history[d.driver_name].push(prevPts + weekendPoints(race, d.driver_name));
-        });
-    });
- 
-    const maxPts = Math.max(...top5.map(d => Math.max(...history[d.driver_name])));
-    const w = 1000, h = 200;
- 
-    let paths = '';
-    // Team colors, and a dashed line for the second driver of a team so teammates stay apart
+// Lines for the progression chart: { name, points, color, dash, perRace, driver? }
+function driverChartEntries(races) {
+    // A dashed line for the second driver of a team so teammates stay apart
     const seenTeams = new Set();
-    const lines = top5.map(d => {
+    return championship.slice(0, 5).map(d => {
         const dashed = seenTeams.has(d.team_name);
         seenTeams.add(d.team_name);
-        return { color: teamColor(d.team_name), dash: dashed ? '12 8' : 'none' };
+        return {
+            name: d.driver_name,
+            driver: d.driver_name,
+            points: d.points,
+            color: teamColor(d.team_name),
+            dash: dashed ? '12 8' : 'none',
+            perRace: races.map(race => weekendPoints(race, d.driver_name))
+        };
     });
+}
 
-    top5.forEach((d, i) => {
-        const ptsArray = history[d.driver_name];
-        const stepX = w / rounds;
- 
-        let pathD = `M 0 ${h - (ptsArray[0] / (maxPts || 1)) * (h - 20)}`;
-        ptsArray.slice(1).forEach((p, r) => {
-            const x = (r + 1) * stepX;
-            const y = h - (p / (maxPts || 1)) * (h - 20);
-            pathD += ` L ${x} ${y}`;
-        });
- 
+function teamChartEntries(races) {
+    return getTeamStats(races).slice(0, 5).map(team => ({
+        name: team.team_name,
+        points: team.points,
+        color: teamColor(team.team_name),
+        dash: 'none',
+        perRace: team.weekendPoints
+    }));
+}
+
+async function drawChampionshipChart() {
+    const races = await fetchAllRacesForStats();
+    const rounds = races.length;
+    const entries = standingsMode === 'drivers' ? driverChartEntries(races) : teamChartEntries(races);
+    if (rounds === 0 || entries.length === 0) return;
+
+    // Running total per round, starting at 0
+    const history = entries.map(e => e.perRace.reduce((acc, p) => [...acc, acc[acc.length - 1] + p], [0]));
+    const maxPts = Math.max(...history.flat()) || 1;
+    const w = 1000, h = 200;
+    const stepX = w / rounds;
+
+    const paths = entries.map((entry, i) => {
+        const pathD = history[i]
+            .map((p, r) => `${r === 0 ? 'M' : 'L'} ${r * stepX} ${h - (p / maxPts) * (h - 20)}`)
+            .join(' ');
         const opacity = i === 0 ? '1' : '0.75';
         const sw = i === 0 ? '4' : '2.5';
-
-        paths += `
-            <path d="${pathD}" fill="none" stroke="${lines[i].color}" stroke-dasharray="${lines[i].dash}" stroke-width="${sw}" stroke-opacity="${opacity}"
+        return `
+            <path d="${pathD}" fill="none" stroke="${entry.color}" stroke-dasharray="${entry.dash}" stroke-width="${sw}" stroke-opacity="${opacity}"
                 class="transition-all hover:stroke-opacity-100 hover:stroke-width-4 cursor-pointer">
-                <title>${d.driver_name}</title>
+                <title>${entry.name}</title>
             </path>
         `;
-    });
- 
+    }).join('');
+
     document.getElementById('champ-chart').innerHTML = `
         <svg viewBox="0 0 ${w} ${h}" class="w-full h-full overflow-visible">
             ${paths}
         </svg>
     `;
 
-    document.getElementById('champ-legend').innerHTML = top5.map((d, i) => `
-        <button data-driver="${d.driver_name}" class="flex items-center gap-2 font-header text-sm font-bold uppercase tracking-wider text-slate-400 hover:text-white transition-colors">
-            <svg width="22" height="4" class="overflow-visible">
-                <line x1="0" y1="2" x2="22" y2="2" stroke="${lines[i].color}" stroke-width="4" stroke-dasharray="${lines[i].dash === 'none' ? 'none' : '6 4'}"></line>
-            </svg>
-            ${d.driver_name}
-            <span class="text-slate-600">${d.points}</span>
-        </button>
-    `).join('');
+    // Drivers can be clicked through to their profile, teams have no page
+    document.getElementById('champ-legend').innerHTML = entries.map(entry => {
+        const tag = entry.driver ? 'button' : 'span';
+        return `
+            <${tag} ${entry.driver ? `data-driver="${entry.driver}"` : ''} class="flex items-center gap-2 font-header text-sm font-bold uppercase tracking-wider text-slate-400 ${entry.driver ? 'hover:text-white transition-colors' : ''}">
+                <svg width="22" height="4" class="overflow-visible">
+                    <line x1="0" y1="2" x2="22" y2="2" stroke="${entry.color}" stroke-width="4" stroke-dasharray="${entry.dash === 'none' ? 'none' : '6 4'}"></line>
+                </svg>
+                ${entry.name}
+                <span class="text-slate-600">${entry.points}</span>
+            </${tag}>
+        `;
+    }).join('');
 }
- 
+
+// Position of every team after every round, as a bump chart
+async function drawTeamPositionChart() {
+    const races = await fetchAllRacesForStats();
+    const teams = getTeamStats(races);
+    if (races.length === 0 || teams.length === 0) return;
+
+    const order = rankPerRound(teams.map(t => ({ name: t.team_name, perRace: t.weekendPoints })));
+    const x = i => (i + 0.5) / races.length * 100;
+    const y = pos => 4 + (pos - 1) / Math.max(teams.length - 1, 1) * 92;
+
+    const lines = teams.map(team => {
+        const positions = order.map(round => round.indexOf(team.team_name) + 1);
+        const color = teamColor(team.team_name);
+        return {
+            team,
+            color,
+            last: positions[positions.length - 1],
+            polyline: `<polyline points="${positions.map((pos, i) => `${x(i)},${y(pos)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>`,
+            dots: positions.map((pos, i) => `
+                <span class="absolute w-2.5 h-2.5 rounded-full -translate-x-1/2 -translate-y-1/2 border-2 border-[#10141C]"
+                    style="left: ${x(i)}%; top: ${y(pos)}%; background: ${color}" title="${team.team_name} after ${races[i].track_name}: P${pos}"></span>
+            `).join('')
+        };
+    });
+
+    document.getElementById('team-position-chart').innerHTML = `
+        <div class="flex gap-4">
+            <div class="relative flex-1 h-72">
+                <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    ${lines.map(l => l.polyline).join('')}
+                </svg>
+                ${lines.map(l => l.dots).join('')}
+            </div>
+            <div class="relative w-44 max-md:w-24 h-72 shrink-0">
+                ${lines.map(l => `
+                    <div class="absolute left-0 right-0 -translate-y-1/2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider truncate" style="top: ${y(l.last)}%">
+                        <span class="font-header text-sm text-slate-500 w-6 shrink-0">P${l.last}</span>
+                        <span class="truncate" style="color: ${l.color}">${l.team.team_name}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        <div class="flex gap-4 mt-3">
+            <div class="flex-1 flex gap-2">
+                ${races.map(race => `
+                    <span class="flex-1 min-w-0 text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate text-center">${race.track_name.slice(0, 3)}</span>
+                `).join('')}
+            </div>
+            <div class="w-44 max-md:w-24 shrink-0"></div>
+        </div>
+    `;
+}
+
 // ---------- Race weekend ----------
  
 async function loadRace(raceEntry) {
@@ -934,13 +1195,34 @@ function renderDriverStats(races, driver, position) {
     ].join('');
 }
 
-// Championship order after every round, as a list of driver names per round
-function getStandingsPerRound(races) {
-    const totals = new Map(championship.map(d => [d.driver_name, 0]));
-    return races.map(race => {
-        totals.forEach((points, name) => totals.set(name, points + weekendPoints(race, name)));
+// Order after every round for entries { name, perRace }, as a list of names per round.
+// Ties keep the order of entries, which is the current championship order.
+function rankPerRound(entries) {
+    const totals = new Map(entries.map(e => [e.name, 0]));
+    const rounds = entries[0]?.perRace.length ?? 0;
+    return Array.from({ length: rounds }, (_, round) => {
+        entries.forEach(e => totals.set(e.name, totals.get(e.name) + e.perRace[round]));
         return [...totals].sort((a, b) => b[1] - a[1]).map(([name]) => name);
     });
+}
+
+function getStandingsPerRound(races) {
+    return rankPerRound(championship.map(d => ({
+        name: d.driver_name,
+        perRace: races.map(race => weekendPoints(race, d.driver_name))
+    })));
+}
+
+// How often driver a finished ahead of driver b in one session type, over the season
+function countAhead(races, session, a, b) {
+    let ahead = 0, behind = 0;
+    races.forEach(race => {
+        const mine = findResult(race, session, a);
+        const theirs = findResult(race, session, b);
+        if (!mine || !theirs) return;
+        mine.position < theirs.position ? ahead++ : behind++;
+    });
+    return { ahead, behind };
 }
 
 function renderDriverPositionChart(races, driver) {
@@ -1001,16 +1283,7 @@ function renderHeadToHead(races, driver) {
         { key: 'qualifying', label: 'Qualifying' },
         { key: 'sprint', label: 'Sprint' },
         { key: 'race', label: 'Feature' }
-    ].map(({ key, label }) => {
-        let ahead = 0, behind = 0;
-        races.forEach(race => {
-            const mine = findResult(race, key, driver.driver_name);
-            const theirs = findResult(race, key, mate.driver_name);
-            if (!mine || !theirs) return;
-            mine.position < theirs.position ? ahead++ : behind++;
-        });
-        return { label, ahead, behind };
-    });
+    ].map(({ key, label }) => ({ label, ...countAhead(races, key, driver.driver_name, mate.driver_name) }));
     rows.push({ label: 'Points', ahead: driver.points, behind: mate.points });
 
     container.innerHTML = `

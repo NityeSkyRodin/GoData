@@ -85,21 +85,18 @@
                 <div id="champ-legend" class="flex flex-wrap gap-x-6 gap-y-2 mt-6"></div>
             </div>
 
+            <div id="team-position-section" class="hidden bg-[#10141C] border border-[#232734] corner-cut p-6 mb-14">
+                <h3 class="font-header text-xl font-black uppercase italic tracking-wide text-white mb-6">Team Positions</h3>
+                <div id="team-position-chart"></div>
+            </div>
+
             <h2 class="section-heading font-header text-2xl md:text-3xl font-black uppercase italic tracking-wide mb-6">Top 3 Standings</h2>
             <div id="standings-podium" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 relative z-10"></div>
 
             <div id="standings-table-wrapper" class="bg-[#10141C] border border-[#232734] corner-cut overflow-x-auto mb-14">
                 <table class="w-full md:min-w-[650px]">
-                    <thead>
-                        <tr class="bg-[#151821] text-[10px] uppercase tracking-[0.2em] text-slate-500 border-b border-[#232734]">
-                            <th class="text-left py-4 px-5 w-16">Pos</th>
-                            <th id="standings-number-header" class="text-left py-4 px-5 w-16 max-md:hidden">#</th>
-                            <th id="standings-name-header" class="text-left py-4 px-5">Driver</th>
-                            <th id="standings-team-header" class="text-left py-4 px-5 max-md:hidden">Team</th>
-                            <th id="standings-form-header" class="text-left py-4 px-5 w-48 max-md:hidden">Form (Last 5)</th>
-                            <th class="text-right py-4 px-5"><span class="md:hidden">Pts</span><span class="max-md:hidden">Points</span></th>
-                        </tr>
-                    </thead>
+                    <!-- Filled by setStandingsHead: drivers and teams have different columns -->
+                    <thead id="standings-table-head"></thead>
                     <tbody id="standings-table-body"></tbody>
                 </table>
             </div>
