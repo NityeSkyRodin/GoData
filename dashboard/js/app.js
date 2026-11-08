@@ -1085,10 +1085,10 @@ function renderSession(results, session) {
 
 // Pirelli sidewall colors and the letter shown on the tyre, like the icons in the game
 const TYRES = {
-    'Super Soft': { letter: 'SS', color: '#E10600' },
-    'Soft': { letter: 'S', color: '#FFD100' },
-    'Medium': { letter: 'M', color: '#F5F5F5' },
-    'Hard': { letter: 'H', color: '#FF8A00' },
+    'Super Soft': { letter: 'SS', color: '#FF4FB4' },
+    'Soft': { letter: 'S', color: '#E10600' },
+    'Medium': { letter: 'M', color: '#FFD100' },
+    'Hard': { letter: 'H', color: '#F5F5F5' },
     'Intermediate': { letter: 'I', color: '#22C55E' },
     'Wet': { letter: 'W', color: '#3B82F6' }
 };
