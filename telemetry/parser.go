@@ -12,7 +12,6 @@ import (
 	"GoData/tracks"
 )
 
-// cString leest een naam uit een vast byte-veld: alles tot de eerste nul-byte.
 func cString(b []byte) string {
 	if i := bytes.IndexByte(b, 0); i >= 0 {
 		b = b[:i]
@@ -76,8 +75,6 @@ func ParseTyres(payload []byte) map[int]TyreStatus {
 	return out
 }
 
-// ParseLapData leest het Lap Data-blok van één auto. Achter de 22 auto's staan nog
-// 2 bytes voor time trial, die tellen niet mee in de grootte per auto.
 func ParseLapData(payload []byte, car int) (LapData, error) {
 	var lap LapData
 	perCar := (len(payload) - 2) / maxCars
@@ -93,9 +90,9 @@ func ParseLapData(payload []byte, car int) (LapData, error) {
 	return lap, err
 }
 
-// tyreStints zet de stints uit de eindklassering om naar band + eindronde.
-// De arrays hebben altijd 8 plekken, alleen de eerste NumTyreStints zijn gevuld.
-func tyreStints(tail classificationTail) []database.TyreStint {
+const lastStintEndLap = 255
+
+func tyreStints(tail classificationTail, numLaps int) []database.TyreStint {
 	count := int(tail.NumTyreStints)
 	if count > len(tail.TyreStintsVisual) {
 		count = len(tail.TyreStintsVisual)
@@ -103,12 +100,67 @@ func tyreStints(tail classificationTail) []database.TyreStint {
 
 	stints := make([]database.TyreStint, 0, count)
 	for s := 0; s < count; s++ {
+		endLap := int(tail.TyreStintsEndLaps[s])
+		if endLap == lastStintEndLap {
+			endLap = numLaps
+		}
 		stints = append(stints, database.TyreStint{
 			Compound: compoundName(tail.TyreStintsVisual[s]),
-			EndLap:   int(tail.TyreStintsEndLaps[s]),
+			EndLap:   endLap,
 		})
 	}
 	return stints
+}
+
+type ClassificationEntry struct {
+	Head   classificationHead
+	Reason uint8
+	Tail   classificationTail
+}
+
+func ParseClassificationEntries(payload []byte) ([]ClassificationEntry, error) {
+	if len(payload) < 1 {
+		return nil, fmt.Errorf("packet too small: %d bytes", len(payload))
+	}
+
+	numCars := int(payload[0])
+	body := payload[1:]
+	perCar := len(body) / maxCars
+
+	headSize := binary.Size(classificationHead{})
+	tailSize := binary.Size(classificationTail{})
+
+	if perCar < headSize+tailSize {
+		return nil, fmt.Errorf("unexpected packet size: %d bytes per car, expected at least %d", perCar, headSize+tailSize)
+	}
+
+	hasResultReason := perCar >= headSize+tailSize+1
+
+	if numCars > maxCars {
+		numCars = maxCars
+	}
+
+	entries := make([]ClassificationEntry, 0, numCars)
+	for i := 0; i < numCars; i++ {
+		rec := bytes.NewReader(body[i*perCar : (i+1)*perCar])
+		var entry ClassificationEntry
+
+		if err := binary.Read(rec, binary.LittleEndian, &entry.Head); err != nil {
+			return nil, err
+		}
+
+		if hasResultReason {
+			if err := binary.Read(rec, binary.LittleEndian, &entry.Reason); err != nil {
+				return nil, err
+			}
+		}
+
+		if err := binary.Read(rec, binary.LittleEndian, &entry.Tail); err != nil {
+			return nil, err
+		}
+		entries = append(entries, entry)
+	}
+	return entries, nil
 }
 
 func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, participants map[int]Participant, currentTrackID int8, currentSessionType string) (FinalRaceResult, error) {
@@ -126,49 +178,16 @@ func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, p
 		SessionType: currentSessionType,
 	}
 
-	if len(payload) < 1 {
-		return result, fmt.Errorf("packet too small: %d bytes", len(payload))
+	entries, err := ParseClassificationEntries(payload)
+	if err != nil {
+		return result, err
 	}
+	result.NumCars = len(entries)
+	gamePenalties := make([]int, len(entries))
 
-	numCars := int(payload[0])
-	body := payload[1:]
-	perCar := len(body) / maxCars
-
-	headSize := binary.Size(classificationHead{})
-	tailSize := binary.Size(classificationTail{})
-
-	if perCar < headSize+tailSize {
-		return result, fmt.Errorf("unexpected packet size: %d bytes per car, expected at least %d", perCar, headSize+tailSize)
-	}
-
-	hasResultReason := perCar >= headSize+tailSize+1
-
-	if numCars > maxCars {
-		numCars = maxCars
-	}
-
-	result.NumCars = numCars
-
-	for i := 0; i < numCars; i++ {
-		rec := bytes.NewReader(body[i*perCar : (i+1)*perCar])
-
-		var head classificationHead
-		var reason uint8
-		var tail classificationTail
-
-		if err := binary.Read(rec, binary.LittleEndian, &head); err != nil {
-			return result, err
-		}
-
-		if hasResultReason {
-			if err := binary.Read(rec, binary.LittleEndian, &reason); err != nil {
-				return result, err
-			}
-		}
-
-		if err := binary.Read(rec, binary.LittleEndian, &tail); err != nil {
-			return result, err
-		}
+	for i, entry := range entries {
+		head, tail := entry.Head, entry.Tail
+		gamePenalties[i] = int(tail.PenaltiesTime)
 
 		result.Drivers = append(result.Drivers, DriverResult{
 			Position:         int(head.Position),
@@ -180,7 +199,7 @@ func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, p
 			Points:           int(head.Points),
 			ResultStatusText: resultStatusName(head.ResultStatus),
 			TeamName:         mapTeam(participants[i].TeamID),
-			TyreStints:       tyreStints(tail),
+			TyreStints:       tyreStints(tail, int(head.NumLaps)),
 		})
 	}
 
@@ -188,18 +207,19 @@ func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, p
 		SessionUID:  result.SessionUID,
 		SessionType: result.SessionType,
 	}
-	for _, driver := range result.Drivers {
+	for i, driver := range result.Drivers {
 		databaseResult.Drivers = append(databaseResult.Drivers, database.DriverResult{
-			Position:         driver.Position,
-			RaceNumber:       driver.RaceNumber,
-			Name:             driver.Name,
-			NumLaps:          driver.NumLaps,
-			TotalRaceTime:    driver.TotalRaceTime,
-			BestLapTime:      driver.BestLapTime,
-			Points:           driver.Points,
-			ResultStatusText: driver.ResultStatusText,
-			TeamName:         driver.TeamName,
-			TyreStints:       driver.TyreStints,
+			GamePenaltySeconds: gamePenalties[i],
+			Position:           driver.Position,
+			RaceNumber:         driver.RaceNumber,
+			Name:               driver.Name,
+			NumLaps:            driver.NumLaps,
+			TotalRaceTime:      driver.TotalRaceTime,
+			BestLapTime:        driver.BestLapTime,
+			Points:             driver.Points,
+			ResultStatusText:   driver.ResultStatusText,
+			TeamName:           driver.TeamName,
+			TyreStints:         driver.TyreStints,
 		})
 	}
 
@@ -208,13 +228,21 @@ func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, p
 	}
 
 	n, err := database.ApplyPendingPenalties(db, databaseResult.SessionUID)
-	
+
 	if err != nil {
-    	return result, err
+		return result, err
 	}
-	
+
 	if n > 0 {
-    	fmt.Printf("%d carried over penalties applied\n", n)
+		fmt.Printf("%d carried over penalties applied\n", n)
+	}
+
+	added, err := database.CarryOverGamePenalties(db, databaseResult)
+	if err != nil {
+		return result, err
+	}
+	if added > 0 {
+		fmt.Printf("%d game penalties carried over to the next race (DNF)\n", added)
 	}
 
 	return result, nil

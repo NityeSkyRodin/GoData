@@ -793,7 +793,7 @@ function renderCalendar() {
 function driverChartEntries(races) {
     // A dashed line for the second driver of a team so teammates stay apart
     const seenTeams = new Set();
-    return championship.slice(0, 5).map(d => {
+    return championship.map(d => {
         const dashed = seenTeams.has(d.team_name);
         seenTeams.add(d.team_name);
         return {
@@ -808,7 +808,7 @@ function driverChartEntries(races) {
 }
 
 function teamChartEntries(races) {
-    return getTeamStats(races).slice(0, 5).map(team => ({
+    return getTeamStats(races).map(team => ({
         name: team.team_name,
         points: team.points,
         color: teamColor(team.team_name),
@@ -833,27 +833,32 @@ async function drawChampionshipChart() {
         const pathD = history[i]
             .map((p, r) => `${r === 0 ? 'M' : 'L'} ${r * stepX} ${h - (p / maxPts) * (h - 20)}`)
             .join(' ');
-        const opacity = i === 0 ? '1' : '0.75';
-        const sw = i === 0 ? '4' : '2.5';
+        const top = i < CHART_HIGHLIGHTED;
+        const color = top ? entry.color : '#64748B';
+        const opacity = i === 0 ? '1' : top ? '0.8' : '0.3';
+        const sw = i === 0 ? '4' : top ? '2.5' : '1.5';
         return `
-            <path d="${pathD}" fill="none" stroke="${entry.color}" stroke-dasharray="${entry.dash}" stroke-width="${sw}" stroke-opacity="${opacity}"
-                class="transition-all hover:stroke-opacity-100 hover:stroke-width-4 cursor-pointer">
-                <title>${entry.name}</title>
+            <path data-chart-entry="${i}" d="${pathD}" fill="none" stroke="${color}" stroke-dasharray="${entry.dash}" stroke-width="${sw}" stroke-opacity="${opacity}"
+                style="--line-color: ${entry.color}" class="champ-line cursor-pointer">
+                <title>${entry.name} · ${entry.points} pts</title>
             </path>
         `;
-    }).join('');
+    }).reverse().join('');
 
-    document.getElementById('champ-chart').innerHTML = `
+    const chart = document.getElementById('champ-chart');
+    const legend = document.getElementById('champ-legend');
+
+    chart.innerHTML = `
         <svg viewBox="0 0 ${w} ${h}" class="w-full h-full overflow-visible">
             ${paths}
         </svg>
     `;
 
-    // Drivers can be clicked through to their profile, teams have no page
-    document.getElementById('champ-legend').innerHTML = entries.map(entry => {
+    legend.innerHTML = entries.map((entry, i) => {
         const tag = entry.driver ? 'button' : 'span';
+        const top = i < CHART_HIGHLIGHTED;
         return `
-            <${tag} ${entry.driver ? `data-driver="${entry.driver}"` : ''} class="flex items-center gap-2 font-header text-sm font-bold uppercase tracking-wider text-slate-400 ${entry.driver ? 'hover:text-white transition-colors' : ''}">
+            <${tag} data-chart-entry="${i}" ${entry.driver ? `data-driver="${entry.driver}"` : ''} class="flex items-center gap-2 font-header text-sm font-bold uppercase tracking-wider ${top ? 'text-slate-400' : 'text-slate-600'} hover:text-white transition-colors">
                 <svg width="22" height="4" class="overflow-visible">
                     <line x1="0" y1="2" x2="22" y2="2" stroke="${entry.color}" stroke-width="4" stroke-dasharray="${entry.dash === 'none' ? 'none' : '6 4'}"></line>
                 </svg>
@@ -862,7 +867,22 @@ async function drawChampionshipChart() {
             </${tag}>
         `;
     }).join('');
+
+    // Hovering a line or a legend item brings that line forward and fades the rest
+    const focus = event => {
+        const target = event.target.closest('[data-chart-entry]');
+        chart.classList.toggle('chart-focusing', !!target);
+        chart.querySelectorAll('.champ-line').forEach(line => {
+            line.classList.toggle('chart-focused', !!target && line.dataset.chartEntry === target.dataset.chartEntry);
+        });
+    };
+    [chart, legend].forEach(el => {
+        el.onmouseover = focus;
+        el.onmouseleave = focus;
+    });
 }
+
+const CHART_HIGHLIGHTED = 5;
 
 // Position of every team after every round, as a bump chart
 async function drawTeamPositionChart() {

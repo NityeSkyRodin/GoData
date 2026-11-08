@@ -2,9 +2,6 @@ package telemetry
 
 import "fmt"
 
-// Dit bestand vertaalt de id's die de game in de pakketten stuurt naar leesbare namen.
-
-// mapTeam hoort bij het F2 2025-veld: elk team heeft twee vaste startnummers.
 func mapTeam(teamID uint8) string {
 	switch teamID {
 	case 209:
@@ -56,7 +53,6 @@ func resultStatusName(status uint8) string {
 	return fmt.Sprintf("unknown (%d)", status)
 }
 
-// compoundName vertaalt de visual tyre compound. De F2-banden hebben eigen id's.
 func compoundName(visual uint8) string {
 	switch visual {
 	case 7:

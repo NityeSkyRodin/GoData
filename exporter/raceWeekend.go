@@ -8,7 +8,6 @@ import (
 	"GoData/database"
 )
 
-
 func ParseRaceWeekendResults(db *sql.DB, trackName string) error {
 
 	weekendResults, err := database.GetRaceWeekendResults(db, trackName)
@@ -32,10 +31,10 @@ func ParseRaceWeekendResults(db *sql.DB, trackName string) error {
 }
 
 func ExportRaceIndex(db *sql.DB, filename string) error {
-    races, err := database.GetRaceIndex(db)
-    if err != nil {
-        return err
-    }
+	races, err := database.GetRaceIndex(db)
+	if err != nil {
+		return err
+	}
 
-    return ParseToJSONFile(races, filename)
+	return ParseToJSONFile(races, filename)
 }

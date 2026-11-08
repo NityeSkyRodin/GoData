@@ -12,19 +12,19 @@ import (
 )
 
 type DriverResult struct {
-	Position         int
-	RaceNumber       int
-	Name             string
-	NumLaps          int
-	TotalRaceTime    string
-	BestLapTime      string
-	Points           int
-	ResultStatusText string
-	TeamName         string
-	TyreStints       []TyreStint
+	Position           int
+	RaceNumber         int
+	Name               string
+	NumLaps            int
+	TotalRaceTime      string
+	BestLapTime        string
+	Points             int
+	ResultStatusText   string
+	TeamName           string
+	TyreStints         []TyreStint
+	GamePenaltySeconds int
 }
 
-// TyreStint is één stuk race op dezelfde band: welke band en tot welke ronde.
 type TyreStint struct {
 	Compound string `json:"compound"`
 	EndLap   int    `json:"end_lap"`
@@ -37,18 +37,18 @@ type RaceResult struct {
 }
 
 type FullSeasonResult struct {
-    DriverNumber int    `json:"driver_number"`
-    DriverName   string `json:"driver_name"`
-    TeamName     string `json:"team_name"`
-    Points       int    `json:"points"`
+	DriverNumber int    `json:"driver_number"`
+	DriverName   string `json:"driver_name"`
+	TeamName     string `json:"team_name"`
+	Points       int    `json:"points"`
 }
 
 type RaceWeekend struct {
-	TrackName  string             `json:"track_name"`
-	TrackID    int                `json:"track_id"`
-	Qualifying []FinalRaceResult  `json:"qualifying"`
-	Sprint     []FinalRaceResult  `json:"sprint"`
-	Race       []FinalRaceResult  `json:"race"`
+	TrackName  string            `json:"track_name"`
+	TrackID    int               `json:"track_id"`
+	Qualifying []FinalRaceResult `json:"qualifying"`
+	Sprint     []FinalRaceResult `json:"sprint"`
+	Race       []FinalRaceResult `json:"race"`
 }
 type FinalRaceResult struct {
 	SessionUID  string `json:"-"`
@@ -65,16 +65,14 @@ type FinalRaceResult struct {
 	Points        int    `json:"points"`
 	Status        string `json:"status"`
 
-	// Leeg bij oude races en kwalificatie, dan laat omitempty het veld weg uit de JSON
 	TyreStints []TyreStint `json:"tyre_stints,omitempty"`
 }
 
 type RaceIndex struct {
-    TrackName string `json:"track_name"`
-    File      string `json:"file"`
+	TrackName string `json:"track_name"`
+	File      string `json:"file"`
 }
 
-// Race is één opgeslagen sessie uit de races-tabel.
 type Race struct {
 	SessionUID  string
 	TrackName   string
@@ -83,8 +81,6 @@ type Race struct {
 	CreatedAt   string
 }
 
-// Driver is een coureur zoals die in de resultaten voorkomt. Er is geen
-// aparte coureurs-tabel; deze wordt afgeleid uit race_results.
 type Driver struct {
 	RaceNumber int
 	DriverName string
@@ -141,8 +137,6 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		return nil, fmt.Errorf("error when creating database schema: %w", err)
 	}
 
-	// Kolommen die later zijn toegevoegd. CREATE TABLE IF NOT EXISTS voegt die
-	// niet toe aan een bestaande tabel, dus dat doen we hier zelf.
 	if err := addColumnIfMissing(db, "race_results", "tyre_stints", "TEXT"); err != nil {
 		return nil, err
 	}
@@ -292,7 +286,7 @@ func GetRaceWeekendResults(db *sql.DB, trackName string) (*RaceWeekend, error) {
 		var result FinalRaceResult
 		var resultTrackName string
 		var resultTrackID int
-		var stints string // JSON-tekst, leeg bij races van voor deze kolom
+		var stints string
 
 		if err := rows.Scan(
 			&result.SessionUID,
@@ -347,32 +341,31 @@ func GetRaceWeekendResults(db *sql.DB, trackName string) (*RaceWeekend, error) {
 }
 
 func GetRaceIndex(db *sql.DB) ([]RaceIndex, error) {
-    rows, err := db.Query(`
+	rows, err := db.Query(`
         SELECT DISTINCT track_name
         FROM races
         ORDER BY created_at
     `)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var races []RaceIndex
+	var races []RaceIndex
 
-    for rows.Next() {
-        var race RaceIndex
+	for rows.Next() {
+		var race RaceIndex
 
-        if err := rows.Scan(&race.TrackName); err != nil {
-            return nil, err
-        }
+		if err := rows.Scan(&race.TrackName); err != nil {
+			return nil, err
+		}
 
-        race.File = strings.ToLower(race.TrackName) + ".json"
-        races = append(races, race)
-    }
+		race.File = strings.ToLower(race.TrackName) + ".json"
+		races = append(races, race)
+	}
 
-    return races, rows.Err()
+	return races, rows.Err()
 }
-// GetRaces geeft alle opgeslagen sessies terug, oudste eerst.
 func GetRaces(db *sql.DB) ([]Race, error) {
 	rows, err := db.Query(`
 		SELECT session_uid, track_name, track_id, session_type, created_at
@@ -396,9 +389,6 @@ func GetRaces(db *sql.DB) ([]Race, error) {
 	return races, rows.Err()
 }
 
-// GetDrivers geeft per startnummer één coureur terug, met de naam en het team
-// uit de meest recente sessie. Namen kunnen per sessie wisselen, dus groeperen
-// op race_number voorkomt dat dezelfde auto twee keer in de lijst komt.
 func GetDrivers(db *sql.DB) ([]Driver, error) {
 	rows, err := db.Query(`
 		SELECT rr.race_number, rr.driver_name, rr.team_name, MAX(r.created_at)
@@ -414,7 +404,7 @@ func GetDrivers(db *sql.DB) ([]Driver, error) {
 	var drivers []Driver
 	for rows.Next() {
 		var driver Driver
-		var laatsteSessie string // alleen om MAX() ergens in te scannen
+		var laatsteSessie string
 		if err := rows.Scan(&driver.RaceNumber, &driver.DriverName,
 			&driver.TeamName, &laatsteSessie); err != nil {
 			return nil, fmt.Errorf("error when scanning driver: %w", err)
@@ -425,8 +415,6 @@ func GetDrivers(db *sql.DB) ([]Driver, error) {
 	return drivers, rows.Err()
 }
 
-// GetTrackNames geeft alleen de circuitnamen terug, in de volgorde waarin ze
-// voor het eerst gereden zijn. Voor keuzelijstjes waar je de rest niet nodig hebt.
 func GetTrackNames(db *sql.DB) ([]string, error) {
 	rows, err := db.Query(`
 		SELECT track_name
@@ -450,7 +438,6 @@ func GetTrackNames(db *sql.DB) ([]string, error) {
 	return names, rows.Err()
 }
 
-// GetDriverNames geeft alleen de coureursnamen terug, één per startnummer.
 func GetDriverNames(db *sql.DB) ([]string, error) {
 	rows, err := db.Query(`
 		SELECT rr.driver_name, MAX(r.created_at)

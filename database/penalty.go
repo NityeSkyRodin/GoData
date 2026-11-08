@@ -120,11 +120,6 @@ func ApplyPenalty(db *sql.DB, p PenaltyInput) (carriedOver bool, err error) {
 	return carriedOver, nil
 }
 
-// ApplyPendingPenalties voert de doorgeschoven straffen door in een net
-// opgeslagen sessie. Roep deze aan na SaveRaceResult. Kwalificatie wordt
-// overgeslagen; coureurs die niet meededen of weer uitvielen houden hun straf
-// open voor de volgende sprint/race. Geeft terug hoeveel straffen er zijn
-// doorgevoerd.
 func ApplyPendingPenalties(db *sql.DB, sessionUID string) (int, error) {
 	tx, err := db.Begin()
 	if err != nil {
@@ -156,8 +151,6 @@ func ApplyPendingPenalties(db *sql.DB, sessionUID string) (int, error) {
 
 	applied := 0
 	for _, pp := range pending {
-		// Elke straf apart doorvoeren, want moveDown verschuift de indexen.
-		// Op startnummer zoeken: namen kunnen per sessie verschillen.
 		i := -1
 		for j, row := range rows {
 			if row.RaceNumber == pp.RaceNumber {
@@ -191,6 +184,36 @@ func ApplyPendingPenalties(db *sql.DB, sessionUID string) (int, error) {
 		return 0, fmt.Errorf("error when committing transaction: %w", err)
 	}
 	return applied, nil
+}
+
+func CarryOverGamePenalties(db *sql.DB, result RaceResult) (int, error) {
+	if result.SessionType != "Sprint" && result.SessionType != "Race" {
+		return 0, nil
+	}
+
+	added := 0
+	for _, driver := range result.Drivers {
+		if driver.GamePenaltySeconds == 0 || driver.ResultStatusText == statusFinished {
+			continue
+		}
+
+		res, err := db.Exec(`
+			INSERT INTO pending_penalties (race_number, driver_name, seconds, origin_session_uid)
+			SELECT ?, ?, ?, ?
+			WHERE NOT EXISTS (
+				SELECT 1 FROM pending_penalties
+				WHERE race_number = ? AND origin_session_uid = ?
+			)`,
+			driver.RaceNumber, driver.Name, carryOverSeconds, result.SessionUID,
+			driver.RaceNumber, result.SessionUID)
+		if err != nil {
+			return added, fmt.Errorf("error when saving carried over game penalty for %s: %w", driver.Name, err)
+		}
+		if n, _ := res.RowsAffected(); n > 0 {
+			added++
+		}
+	}
+	return added, nil
 }
 
 func getSessionRows(tx *sql.Tx, sessionUID string) ([]sessionRow, error) {
@@ -250,7 +273,6 @@ func moveDown(rows []sessionRow, i int) {
 		i++
 	}
 }
-
 
 func rerankAndSave(tx *sql.Tx, rows []sessionRow, sessionType string) error {
 	bonus := make(map[int]int, len(rows))
@@ -334,7 +356,6 @@ func parseRaceTime(s string) (int64, bool) {
 	}
 	return total, true
 }
-
 
 func formatRaceTime(total int64) string {
 	ms := total % 1000

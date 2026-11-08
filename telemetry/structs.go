@@ -6,7 +6,6 @@ import (
 	"GoData/database"
 )
 
-// HeaderSize is de vaste grootte van de pakket-header in bytes.
 const HeaderSize = 29
 const maxCars = 22
 
@@ -52,8 +51,6 @@ type Participant struct {
 	DriverID   int
 }
 
-// LapData is het blok van één auto uit het Lap Data-pakket (packet 2),
-// in de volgorde van de F1 25-specificatie. 57 bytes, zonder opvulling ertussen.
 type LapData struct {
 	LastLapTimeInMS              uint32
 	CurrentLapTimeInMS           uint32
@@ -65,35 +62,34 @@ type LapData struct {
 	DeltaToCarInFrontMinutesPart uint8
 	DeltaToRaceLeaderMSPart      uint16
 	DeltaToRaceLeaderMinutesPart uint8
-	LapDistance                  float32 // meter in deze ronde
-	TotalDistance                float32 // meter in de hele sessie
+	LapDistance                  float32
+	TotalDistance                float32
 	SafetyCarDelta               float32
 	CarPosition                  uint8
 	CurrentLapNum                uint8
-	PitStatus                    uint8 // 0 = baan, 1 = pitlane, 2 = pitbox
+	PitStatus                    uint8
 	NumPitStops                  uint8
-	Sector                       uint8 // 0, 1 of 2
+	Sector                       uint8
 	CurrentLapInvalid            uint8
-	Penalties                    uint8 // opgebouwde tijdstraf in seconden
+	Penalties                    uint8
 	TotalWarnings                uint8
 	CornerCuttingWarnings        uint8
 	NumUnservedDriveThroughPens  uint8
 	NumUnservedStopGoPens        uint8
 	GridPosition                 uint8
-	DriverStatus                 uint8 // 0 = garage, 1 = vliegende ronde, 2 = in-lap, 3 = out-lap, 4 = op de baan
+	DriverStatus                 uint8
 	ResultStatus                 uint8
 	PitLaneTimerActive           uint8
 	PitLaneTimeInLaneInMS        uint16
 	PitStopTimerInMS             uint16
 	PitStopShouldServePen        uint8
-	SpeedTrapFastestSpeed        float32 // km/u
+	SpeedTrapFastestSpeed        float32
 	SpeedTrapFastestLap          uint8
 }
 
-// TyreStatus is de band van één auto uit het Car Status-pakket (packet 7).
 type TyreStatus struct {
-	ActualCompound uint8  // ruw id van de echte compound, nog niet vertaald
-	Compound       string // wat je in de game ziet: Soft, Medium, Hard, ...
+	ActualCompound uint8
+	Compound       string
 	AgeLaps        int
 }
 

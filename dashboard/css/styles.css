@@ -90,3 +90,17 @@ body {
         padding-right: 10px;
     }
 }
+
+.champ-line {
+    transition: stroke-opacity 0.15s, stroke-width 0.15s;
+}
+
+.chart-focusing .champ-line {
+    stroke-opacity: 0.08;
+}
+
+.chart-focusing .champ-line.chart-focused {
+    stroke: var(--line-color);
+    stroke-opacity: 1;
+    stroke-width: 4;
+}
