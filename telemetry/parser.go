@@ -48,6 +48,69 @@ func ParseParticipants(payload []byte) map[int]Participant {
 	return out
 }
 
+const (
+	statusActualCompound = 25
+	statusVisualCompound = 26
+	statusTyresAge       = 27
+)
+
+func ParseTyres(payload []byte) map[int]TyreStatus {
+	out := map[int]TyreStatus{}
+	perCar := len(payload) / maxCars
+	if perCar <= statusTyresAge {
+		return out
+	}
+
+	for i := 0; i < maxCars; i++ {
+		rec := payload[i*perCar : (i+1)*perCar]
+		visual := rec[statusVisualCompound]
+		if visual == 0 {
+			continue
+		}
+		out[i] = TyreStatus{
+			ActualCompound: rec[statusActualCompound],
+			Compound:       compoundName(visual),
+			AgeLaps:        int(rec[statusTyresAge]),
+		}
+	}
+	return out
+}
+
+// ParseLapData leest het Lap Data-blok van één auto. Achter de 22 auto's staan nog
+// 2 bytes voor time trial, die tellen niet mee in de grootte per auto.
+func ParseLapData(payload []byte, car int) (LapData, error) {
+	var lap LapData
+	perCar := (len(payload) - 2) / maxCars
+	if perCar < binary.Size(lap) {
+		return lap, fmt.Errorf("lap data too short: %d bytes", len(payload))
+	}
+	if car < 0 || car >= maxCars {
+		return lap, fmt.Errorf("car index %d out of range", car)
+	}
+
+	rec := bytes.NewReader(payload[car*perCar : (car+1)*perCar])
+	err := binary.Read(rec, binary.LittleEndian, &lap)
+	return lap, err
+}
+
+// tyreStints zet de stints uit de eindklassering om naar band + eindronde.
+// De arrays hebben altijd 8 plekken, alleen de eerste NumTyreStints zijn gevuld.
+func tyreStints(tail classificationTail) []database.TyreStint {
+	count := int(tail.NumTyreStints)
+	if count > len(tail.TyreStintsVisual) {
+		count = len(tail.TyreStintsVisual)
+	}
+
+	stints := make([]database.TyreStint, 0, count)
+	for s := 0; s < count; s++ {
+		stints = append(stints, database.TyreStint{
+			Compound: compoundName(tail.TyreStintsVisual[s]),
+			EndLap:   int(tail.TyreStintsEndLaps[s]),
+		})
+	}
+	return stints
+}
+
 func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, participants map[int]Participant, currentTrackID int8, currentSessionType string) (FinalRaceResult, error) {
 
 	if currentTrackID == -1 {
@@ -117,6 +180,7 @@ func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, p
 			Points:           int(head.Points),
 			ResultStatusText: resultStatusName(head.ResultStatus),
 			TeamName:         mapTeam(participants[i].TeamID),
+			TyreStints:       tyreStints(tail),
 		})
 	}
 
@@ -135,6 +199,7 @@ func ParseFinalClassification(db *sql.DB, header PacketHeader, payload []byte, p
 			Points:           driver.Points,
 			ResultStatusText: driver.ResultStatusText,
 			TeamName:         driver.TeamName,
+			TyreStints:       driver.TyreStints,
 		})
 	}
 

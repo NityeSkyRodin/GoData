@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -20,6 +21,13 @@ type DriverResult struct {
 	Points           int
 	ResultStatusText string
 	TeamName         string
+	TyreStints       []TyreStint
+}
+
+// TyreStint is één stuk race op dezelfde band: welke band en tot welke ronde.
+type TyreStint struct {
+	Compound string `json:"compound"`
+	EndLap   int    `json:"end_lap"`
 }
 
 type RaceResult struct {
@@ -56,6 +64,9 @@ type FinalRaceResult struct {
 	BestLapTime   string `json:"best_lap_time"`
 	Points        int    `json:"points"`
 	Status        string `json:"status"`
+
+	// Leeg bij oude races en kwalificatie, dan laat omitempty het veld weg uit de JSON
+	TyreStints []TyreStint `json:"tyre_stints,omitempty"`
 }
 
 type RaceIndex struct {
@@ -130,7 +141,41 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		return nil, fmt.Errorf("error when creating database schema: %w", err)
 	}
 
+	// Kolommen die later zijn toegevoegd. CREATE TABLE IF NOT EXISTS voegt die
+	// niet toe aan een bestaande tabel, dus dat doen we hier zelf.
+	if err := addColumnIfMissing(db, "race_results", "tyre_stints", "TEXT"); err != nil {
+		return nil, err
+	}
+
 	return db, nil
+}
+
+func addColumnIfMissing(db *sql.DB, table, column, columnType string) error {
+	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(%s)", table))
+	if err != nil {
+		return fmt.Errorf("error when reading columns of %s: %w", table, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var cid, notNull, pk int
+		var name, colType string
+		var defaultValue sql.NullString
+		if err := rows.Scan(&cid, &name, &colType, &notNull, &defaultValue, &pk); err != nil {
+			return fmt.Errorf("error when scanning column of %s: %w", table, err)
+		}
+		if name == column {
+			return nil
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	if _, err := db.Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", table, column, columnType)); err != nil {
+		return fmt.Errorf("error when adding column %s to %s: %w", column, table, err)
+	}
+	return nil
 }
 
 func SaveRaceResult(db *sql.DB, result RaceResult, trackID int8) error {
@@ -152,18 +197,22 @@ func SaveRaceResult(db *sql.DB, result RaceResult, trackID int8) error {
 	stmt, err := tx.Prepare(`
 		INSERT INTO race_results (
 			session_uid, position, race_number, driver_name, num_laps,
-			total_race_time, best_lap_time, points, status, session_type, team_name
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+			total_race_time, best_lap_time, points, status, session_type, team_name, tyre_stints
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return fmt.Errorf("error when preparing driver statement: %w", err)
 	}
 	defer stmt.Close()
 
 	for _, driver := range result.Drivers {
+		stints, err := json.Marshal(driver.TyreStints)
+		if err != nil {
+			return fmt.Errorf("error when encoding tyre stints of %s: %w", driver.Name, err)
+		}
 		if _, err := stmt.Exec(
 			result.SessionUID, driver.Position, driver.RaceNumber, driver.Name,
 			driver.NumLaps, driver.TotalRaceTime, driver.BestLapTime, driver.Points,
-			driver.ResultStatusText, result.SessionType, driver.TeamName,
+			driver.ResultStatusText, result.SessionType, driver.TeamName, string(stints),
 		); err != nil {
 			return fmt.Errorf("error when saving driver %s: %w", driver.Name, err)
 		}
@@ -216,7 +265,8 @@ func GetRaceWeekendResults(db *sql.DB, trackName string) (*RaceWeekend, error) {
 			rr.total_race_time,
 			rr.best_lap_time,
 			rr.points,
-			rr.status
+			rr.status,
+			COALESCE(rr.tyre_stints, '')
 		FROM races r
 		JOIN race_results rr
 			ON rr.session_uid = r.session_uid
@@ -242,6 +292,7 @@ func GetRaceWeekendResults(db *sql.DB, trackName string) (*RaceWeekend, error) {
 		var result FinalRaceResult
 		var resultTrackName string
 		var resultTrackID int
+		var stints string // JSON-tekst, leeg bij races van voor deze kolom
 
 		if err := rows.Scan(
 			&result.SessionUID,
@@ -258,8 +309,15 @@ func GetRaceWeekendResults(db *sql.DB, trackName string) (*RaceWeekend, error) {
 			&result.BestLapTime,
 			&result.Points,
 			&result.Status,
+			&stints,
 		); err != nil {
 			return nil, fmt.Errorf("error when scanning row: %w", err)
+		}
+
+		if stints != "" {
+			if err := json.Unmarshal([]byte(stints), &result.TyreStints); err != nil {
+				return nil, fmt.Errorf("error when decoding tyre stints of %s: %w", result.DriverName, err)
+			}
 		}
 
 		if weekend == nil {

@@ -1005,7 +1005,11 @@ function renderSession(results, session) {
  
     // Reference time for intervals (first finisher)
     const leaderTime = parseLapTime(sorted[0]?.total_race_time);
- 
+
+    // Qualifying and races from before the stints were stored have no tyre data
+    const hasStints = sorted.some(driver => driver.tyre_stints?.length);
+    document.getElementById('race-tyres-header').classList.toggle('hidden', !hasStints);
+
     document.getElementById('race-table-body').innerHTML = sorted.map(driver => {
         const finished = isFinished(driver);
         const isFastest = fastest && driver.driver_name === fastest.driver_name;
@@ -1057,6 +1061,7 @@ function renderSession(results, session) {
                         <div class="min-w-0">
                             <button data-driver="${driver.driver_name}" class="uppercase hover:text-[#0090D0] transition-colors">${driver.driver_name}</button>
                             <div class="md:hidden max-w-[110px] text-[10px] font-bold tracking-[0.15em] text-slate-500 truncate">${driver.team_name ?? ''}</div>
+                            ${driver.tyre_stints?.length ? `<div class="md:hidden mt-1.5">${tyreStrategy(driver.tyre_stints, { size: 18, showLaps: false })}</div>` : ''}
                         </div>
                     </div>
                 </td>
@@ -1064,6 +1069,7 @@ function renderSession(results, session) {
                 <td class="py-4 px-4 text-center font-header font-bold text-lg text-slate-300 max-md:hidden">${driver.num_laps ?? '-'}</td>
                 <td class="py-4 px-4 font-header font-bold text-base text-slate-400 max-md:hidden">${bestLapDisplay}</td>
                 <td class="py-4 px-4 font-header font-bold text-base max-md:text-sm ${interval === 'LEADER' ? 'text-[#0090D0]' : 'text-slate-400'}">${interval}</td>
+                <td class="py-3 px-4 max-md:hidden ${hasStints ? '' : 'hidden'}">${tyreStrategy(driver.tyre_stints ?? [])}</td>
                 <td class="py-4 px-4 text-center max-md:hidden">
                     <span class="inline-flex px-3 py-1 corner-cut text-[10px] font-black uppercase tracking-widest ${finished ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}">
                         ${driver.status ?? '-'}
@@ -1075,6 +1081,52 @@ function renderSession(results, session) {
     }).join('');
 }
  
+// ---------- Tyres ----------
+
+// Pirelli sidewall colors and the letter shown on the tyre, like the icons in the game
+const TYRES = {
+    'Super Soft': { letter: 'SS', color: '#E10600' },
+    'Soft': { letter: 'S', color: '#FFD100' },
+    'Medium': { letter: 'M', color: '#F5F5F5' },
+    'Hard': { letter: 'H', color: '#FF8A00' },
+    'Intermediate': { letter: 'I', color: '#22C55E' },
+    'Wet': { letter: 'W', color: '#3B82F6' }
+};
+
+// Tyre seen from the side: dark rubber, colored sidewall ring, letter in the middle
+function tyreIcon(compound, size = 26) {
+    const tyre = TYRES[compound] ?? { letter: '?', color: '#64748B' };
+    return `
+        <svg width="${size}" height="${size}" viewBox="0 0 32 32" class="shrink-0" role="img" aria-label="${compound}">
+            <title>${compound}</title>
+            <circle cx="16" cy="16" r="15" fill="#0B0E14" stroke="#2A2F3A" stroke-width="2"></circle>
+            <circle cx="16" cy="16" r="10.5" fill="none" stroke="${tyre.color}" stroke-width="3.5"></circle>
+            <text x="16" y="16" dy="0.36em" text-anchor="middle" font-family="Rajdhani, sans-serif" font-weight="900"
+                font-size="${tyre.letter.length > 1 ? 10 : 13}" fill="${tyre.color}">${tyre.letter}</text>
+        </svg>
+    `;
+}
+
+// The tyres a driver used in order, with the number of laps on each set below the icon
+function tyreStrategy(stints, { size = 26, showLaps = true } = {}) {
+    if (!stints.length) return '<span class="text-slate-600">-</span>';
+
+    let firstLap = 1;
+    const parts = stints.map((stint, i) => {
+        const laps = stint.end_lap - firstLap + 1;
+        const title = `${stint.compound} · lap ${firstLap}–${stint.end_lap}`;
+        firstLap = stint.end_lap + 1;
+        return `
+            ${i > 0 ? '<span class="text-slate-600 text-sm font-bold">›</span>' : ''}
+            <span class="flex flex-col items-center" title="${title}">
+                ${tyreIcon(stint.compound, size)}
+                ${showLaps ? `<span class="text-[10px] font-bold text-slate-500 mt-0.5">${laps}L</span>` : ''}
+            </span>
+        `;
+    });
+    return `<div class="flex items-center gap-1.5">${parts.join('')}</div>`;
+}
+
 function parseLapTime(time) {
     // "1:37.562" -> 97.562 seconds, null when there is no valid time
     const match = /^(?:(\d+):)?(\d+(?:\.\d+)?)$/.exec(String(time ?? '').trim());
