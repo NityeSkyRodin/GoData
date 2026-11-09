@@ -3,19 +3,19 @@
     "driver_number": 9,
     "driver_name": "Borninkhof",
     "team_name": "PREMA Racing",
-    "points": 304
+    "points": 311
   },
   {
     "driver_number": 24,
     "driver_name": "Sebastiaan",
     "team_name": "Van Amersfoort Racing",
-    "points": 236
+    "points": 239
   },
   {
     "driver_number": 1,
     "driver_name": "FORNAROLI",
     "team_name": "Invicta Racing",
-    "points": 148
+    "points": 145
   },
   {
     "driver_number": 7,
@@ -28,12 +28,6 @@
     "driver_name": "LINDBLAD",
     "team_name": "Campos Racing",
     "points": 89
-  },
-  {
-    "driver_number": 5,
-    "driver_name": "NityeSky",
-    "team_name": "MP Motorsport",
-    "points": 78
   },
   {
     "driver_number": 17,
@@ -52,6 +46,12 @@
     "driver_name": "CRAWFORD",
     "team_name": "DAMS Lucas Oil",
     "points": 72
+  },
+  {
+    "driver_number": 5,
+    "driver_name": "NityeSky",
+    "team_name": "MP Motorsport",
+    "points": 71
   },
   {
     "driver_number": 25,

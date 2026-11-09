@@ -93,12 +93,16 @@ func ApplyPenalty(db *sql.DB, p PenaltyInput) (carriedOver bool, err error) {
 		rows = append(append(rows[:i:i], rows[i+1:]...), driver)
 		carriedOver = true
 	case rows[i].Status != statusFinished:
-		carriedOver = true
+		carriedOver = p.Seconds > 0
 	default:
 		if err := addTime(&rows[i], p.Seconds); err != nil {
 			return false, err
 		}
-		moveDown(rows, i)
+		if p.Seconds < 0 {
+			moveUp(rows, i)
+		} else {
+			moveDown(rows, i)
+		}
 	}
 
 	if carriedOver {
@@ -271,6 +275,19 @@ func moveDown(rows []sessionRow, i int) {
 		}
 		rows[i], rows[i+1] = rows[i+1], rows[i]
 		i++
+	}
+}
+
+func moveUp(rows []sessionRow, i int) {
+	newTime := raceTimeMS(rows[i].TotalRaceTime)
+	for i > 0 {
+		prev := rows[i-1]
+		if prev.Status != statusFinished || prev.NumLaps != rows[i].NumLaps ||
+			raceTimeMS(prev.TotalRaceTime) <= newTime {
+			break
+		}
+		rows[i], rows[i-1] = rows[i-1], rows[i]
+		i--
 	}
 }
 
