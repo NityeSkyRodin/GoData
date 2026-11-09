@@ -3,13 +3,13 @@
     "driver_number": 9,
     "driver_name": "Borninkhof",
     "team_name": "PREMA Racing",
-    "points": 278
+    "points": 286
   },
   {
     "driver_number": 24,
     "driver_name": "Sebastiaan",
     "team_name": "Van Amersfoort Racing",
-    "points": 212
+    "points": 223
   },
   {
     "driver_number": 1,
@@ -21,7 +21,7 @@
     "driver_number": 7,
     "driver_name": "BROWNING",
     "team_name": "Hitech Pulse-Eight",
-    "points": 101
+    "points": 104
   },
   {
     "driver_number": 4,
@@ -30,22 +30,22 @@
     "points": 89
   },
   {
+    "driver_number": 17,
+    "driver_name": "DUNNE",
+    "team_name": "Rodin Motorsport",
+    "points": 74
+  },
+  {
     "driver_number": 11,
     "driver_name": "CRAWFORD",
     "team_name": "DAMS Lucas Oil",
     "points": 71
   },
   {
-    "driver_number": 17,
-    "driver_name": "DUNNE",
-    "team_name": "Rodin Motorsport",
-    "points": 69
-  },
-  {
     "driver_number": 25,
     "driver_name": "VILLAGÓMEZ",
     "team_name": "Van Amersfoort Racing",
-    "points": 63
+    "points": 65
   },
   {
     "driver_number": 3,
@@ -72,16 +72,16 @@
     "points": 54
   },
   {
+    "driver_number": 5,
+    "driver_name": "NityeSky",
+    "team_name": "MP Motorsport",
+    "points": 53
+  },
+  {
     "driver_number": 6,
     "driver_name": "VERSCHOOR",
     "team_name": "MP Motorsport",
     "points": 52
-  },
-  {
-    "driver_number": 5,
-    "driver_name": "NityeSky",
-    "team_name": "MP Motorsport",
-    "points": 47
   },
   {
     "driver_number": 12,
@@ -96,16 +96,16 @@
     "points": 26
   },
   {
-    "driver_number": 15,
-    "driver_name": "MIYATA",
-    "team_name": "ART Grand Prix",
-    "points": 13
-  },
-  {
     "driver_number": 16,
     "driver_name": "CORDEEL",
     "team_name": "Rodin Motorsport",
-    "points": 12
+    "points": 16
+  },
+  {
+    "driver_number": 15,
+    "driver_name": "MIYATA",
+    "team_name": "ART Grand Prix",
+    "points": 14
   },
   {
     "driver_number": 21,
