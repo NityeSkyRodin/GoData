@@ -38,5 +38,9 @@
   {
     "track_name": "Montreal",
     "file": "montreal.json"
+  },
+  {
+    "track_name": "Austria",
+    "file": "austria.json"
   }
 ]
