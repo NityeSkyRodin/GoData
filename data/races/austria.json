@@ -756,18 +756,18 @@
   "race": [
     {
       "position": 1,
-      "race_number": 9,
-      "driver_name": "Borninkhof",
-      "team_name": "PREMA Racing",
+      "race_number": 5,
+      "driver_name": "NityeSky",
+      "team_name": "MP Motorsport",
       "num_laps": 14,
-      "total_race_time": "18:09.556",
-      "best_lap_time": "1:14.655",
+      "total_race_time": "18:17.453",
+      "best_lap_time": "1:14.784",
       "points": 25,
       "status": "finished",
       "tyre_stints": [
         {
           "compound": "Soft",
-          "end_lap": 7
+          "end_lap": 6
         },
         {
           "compound": "Super Soft",
@@ -777,18 +777,18 @@
     },
     {
       "position": 2,
-      "race_number": 5,
-      "driver_name": "NityeSky",
-      "team_name": "MP Motorsport",
+      "race_number": 9,
+      "driver_name": "Borninkhof",
+      "team_name": "PREMA Racing",
       "num_laps": 14,
-      "total_race_time": "18:17.453",
-      "best_lap_time": "1:14.784",
+      "total_race_time": "18:19.556",
+      "best_lap_time": "1:14.655",
       "points": 18,
       "status": "finished",
       "tyre_stints": [
         {
           "compound": "Soft",
-          "end_lap": 6
+          "end_lap": 7
         },
         {
           "compound": "Super Soft",
