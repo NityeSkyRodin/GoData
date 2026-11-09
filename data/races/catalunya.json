@@ -489,5 +489,468 @@
       "status": "finished"
     }
   ],
-  "race": null
+  "race": [
+    {
+      "position": 1,
+      "race_number": 24,
+      "driver_name": "Sebastiaan",
+      "team_name": "Van Amersfoort Racing",
+      "num_laps": 13,
+      "total_race_time": "18:56.108",
+      "best_lap_time": "1:23.854",
+      "points": 26,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Hard",
+          "end_lap": 6
+        },
+        {
+          "compound": "Soft",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 2,
+      "race_number": 9,
+      "driver_name": "Borninkhof",
+      "team_name": "PREMA Racing",
+      "num_laps": 13,
+      "total_race_time": "19:07.539",
+      "best_lap_time": "1:24.856",
+      "points": 18,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 4
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 3,
+      "race_number": 1,
+      "driver_name": "FORNAROLI",
+      "team_name": "Invicta Racing",
+      "num_laps": 13,
+      "total_race_time": "19:08.203",
+      "best_lap_time": "1:25.336",
+      "points": 15,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 4,
+      "race_number": 4,
+      "driver_name": "LINDBLAD",
+      "team_name": "Campos Racing",
+      "num_laps": 13,
+      "total_race_time": "19:13.047",
+      "best_lap_time": "1:25.521",
+      "points": 12,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 6
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 5,
+      "race_number": 17,
+      "driver_name": "DUNNE",
+      "team_name": "Rodin Motorsport",
+      "num_laps": 13,
+      "total_race_time": "19:13.386",
+      "best_lap_time": "1:25.020",
+      "points": 10,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 6
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 6,
+      "race_number": 25,
+      "driver_name": "VILLAGÓMEZ",
+      "team_name": "Van Amersfoort Racing",
+      "num_laps": 13,
+      "total_race_time": "19:16.201",
+      "best_lap_time": "1:25.589",
+      "points": 8,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 7,
+      "race_number": 11,
+      "driver_name": "CRAWFORD",
+      "team_name": "DAMS Lucas Oil",
+      "num_laps": 13,
+      "total_race_time": "19:17.577",
+      "best_lap_time": "1:25.604",
+      "points": 6,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 8,
+      "race_number": 15,
+      "driver_name": "MIYATA",
+      "team_name": "ART Grand Prix",
+      "num_laps": 13,
+      "total_race_time": "19:18.008",
+      "best_lap_time": "1:25.595",
+      "points": 4,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 6
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 9,
+      "race_number": 7,
+      "driver_name": "BROWNING",
+      "team_name": "Hitech Pulse-Eight",
+      "num_laps": 13,
+      "total_race_time": "19:20.550",
+      "best_lap_time": "1:25.234",
+      "points": 2,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 10,
+      "race_number": 20,
+      "driver_name": "DÜRKSEN",
+      "team_name": "AIX Racing",
+      "num_laps": 13,
+      "total_race_time": "19:21.086",
+      "best_lap_time": "1:25.499",
+      "points": 1,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 11,
+      "race_number": 16,
+      "driver_name": "CORDEEL",
+      "team_name": "Rodin Motorsport",
+      "num_laps": 13,
+      "total_race_time": "19:22.630",
+      "best_lap_time": "1:25.696",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 12,
+      "race_number": 14,
+      "driver_name": "MARTINS",
+      "team_name": "ART Grand Prix",
+      "num_laps": 13,
+      "total_race_time": "19:23.027",
+      "best_lap_time": "1:25.315",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 13,
+      "race_number": 22,
+      "driver_name": "MEGUETOUNIF",
+      "team_name": "Trident",
+      "num_laps": 13,
+      "total_race_time": "19:23.328",
+      "best_lap_time": "1:25.874",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 14,
+      "race_number": 6,
+      "driver_name": "VERSCHOOR",
+      "team_name": "MP Motorsport",
+      "num_laps": 13,
+      "total_race_time": "19:26.108",
+      "best_lap_time": "1:26.016",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 6
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 15,
+      "race_number": 3,
+      "driver_name": "MARTÍ",
+      "team_name": "Campos Racing",
+      "num_laps": 13,
+      "total_race_time": "19:26.365",
+      "best_lap_time": "1:26.092",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 16,
+      "race_number": 21,
+      "driver_name": "SHIELDS",
+      "team_name": "AIX Racing",
+      "num_laps": 13,
+      "total_race_time": "19:26.614",
+      "best_lap_time": "1:26.134",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 6
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 17,
+      "race_number": 5,
+      "driver_name": "NityeSky",
+      "team_name": "MP Motorsport",
+      "num_laps": 13,
+      "total_race_time": "19:28.285",
+      "best_lap_time": "1:25.097",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 5
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 18,
+      "race_number": 2,
+      "driver_name": "STANĚK",
+      "team_name": "Invicta Racing",
+      "num_laps": 13,
+      "total_race_time": "19:30.074",
+      "best_lap_time": "1:26.032",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 6
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 19,
+      "race_number": 8,
+      "driver_name": "BEGANOVIC",
+      "team_name": "Hitech Pulse-Eight",
+      "num_laps": 13,
+      "total_race_time": "19:35.757",
+      "best_lap_time": "1:26.451",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 6
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 20,
+      "race_number": 23,
+      "driver_name": "ESTERSON",
+      "team_name": "Trident",
+      "num_laps": 13,
+      "total_race_time": "19:36.177",
+      "best_lap_time": "1:26.623",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 6
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 21,
+      "race_number": 12,
+      "driver_name": "MAINI",
+      "team_name": "DAMS Lucas Oil",
+      "num_laps": 13,
+      "total_race_time": "19:36.368",
+      "best_lap_time": "1:26.660",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 6
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    },
+    {
+      "position": 22,
+      "race_number": 10,
+      "driver_name": "MINÌ",
+      "team_name": "PREMA Racing",
+      "num_laps": 13,
+      "total_race_time": "19:36.986",
+      "best_lap_time": "1:26.229",
+      "points": 0,
+      "status": "finished",
+      "tyre_stints": [
+        {
+          "compound": "Soft",
+          "end_lap": 2
+        },
+        {
+          "compound": "Hard",
+          "end_lap": 13
+        }
+      ]
+    }
+  ]
 }

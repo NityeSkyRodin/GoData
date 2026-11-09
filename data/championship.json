@@ -3,43 +3,43 @@
     "driver_number": 9,
     "driver_name": "Borninkhof",
     "team_name": "PREMA Racing",
-    "points": 223
+    "points": 241
   },
   {
     "driver_number": 24,
     "driver_name": "Sebastiaan",
     "team_name": "Van Amersfoort Racing",
-    "points": 159
+    "points": 185
   },
   {
     "driver_number": 1,
     "driver_name": "FORNAROLI",
     "team_name": "Invicta Racing",
-    "points": 105
+    "points": 120
   },
   {
     "driver_number": 7,
     "driver_name": "BROWNING",
     "team_name": "Hitech Pulse-Eight",
-    "points": 99
+    "points": 101
   },
   {
     "driver_number": 4,
     "driver_name": "LINDBLAD",
     "team_name": "Campos Racing",
-    "points": 77
+    "points": 89
   },
   {
     "driver_number": 11,
     "driver_name": "CRAWFORD",
     "team_name": "DAMS Lucas Oil",
-    "points": 65
+    "points": 71
   },
   {
     "driver_number": 17,
     "driver_name": "DUNNE",
     "team_name": "Rodin Motorsport",
-    "points": 59
+    "points": 69
   },
   {
     "driver_number": 22,
@@ -48,9 +48,21 @@
     "points": 55
   },
   {
+    "driver_number": 25,
+    "driver_name": "VILLAGÓMEZ",
+    "team_name": "Van Amersfoort Racing",
+    "points": 54
+  },
+  {
     "driver_number": 14,
     "driver_name": "MARTINS",
     "team_name": "ART Grand Prix",
+    "points": 54
+  },
+  {
+    "driver_number": 20,
+    "driver_name": "DÜRKSEN",
+    "team_name": "AIX Racing",
     "points": 54
   },
   {
@@ -58,18 +70,6 @@
     "driver_name": "MARTÍ",
     "team_name": "Campos Racing",
     "points": 53
-  },
-  {
-    "driver_number": 20,
-    "driver_name": "DÜRKSEN",
-    "team_name": "AIX Racing",
-    "points": 53
-  },
-  {
-    "driver_number": 25,
-    "driver_name": "VILLAGÓMEZ",
-    "team_name": "Van Amersfoort Racing",
-    "points": 46
   },
   {
     "driver_number": 6,
@@ -96,16 +96,16 @@
     "points": 18
   },
   {
+    "driver_number": 15,
+    "driver_name": "MIYATA",
+    "team_name": "ART Grand Prix",
+    "points": 13
+  },
+  {
     "driver_number": 16,
     "driver_name": "CORDEEL",
     "team_name": "Rodin Motorsport",
     "points": 12
-  },
-  {
-    "driver_number": 15,
-    "driver_name": "MIYATA",
-    "team_name": "ART Grand Prix",
-    "points": 9
   },
   {
     "driver_number": 21,
