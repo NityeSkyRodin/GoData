@@ -42,5 +42,9 @@
   {
     "track_name": "Austria",
     "file": "austria.json"
+  },
+  {
+    "track_name": "Silverstone",
+    "file": "silverstone.json"
   }
 ]
